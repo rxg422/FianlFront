@@ -1,0 +1,121 @@
+/* 화면 전체를 덮는 어두운 배경 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* 반투명 검은색 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* 무조건 화면 맨 위에 오도록 설정 */
+}
+
+/* 하얀색 모달 창 */
+.modalContent {
+  background-color: white;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 16px;
+  padding: 40px 30px;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.3s ease-out; /* 부드럽게 나타나는 애니메이션 */
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 닫기 버튼 */
+.closeBtn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #888;
+  cursor: pointer;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h2 {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.header p {
+  color: #666;
+  font-size: 0.95rem;
+}
+
+/* 소셜 버튼 공통 스타일 */
+.socialButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.socialBtn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: opacity 0.2s;
+}
+
+.socialBtn:hover {
+  opacity: 0.9;
+}
+
+.icon {
+  position: absolute;
+  left: 20px;
+  font-size: 1.2rem;
+}
+
+/* 카카오 버튼 */
+.kakao {
+  background-color: #FEE500;
+  color: #000000;
+}
+
+/* 네이버 버튼 */
+.naver {
+  background-color: #03C75A;
+  color: #FFFFFF;
+}
+
+/* 구글 버튼 */
+.google {
+  background-color: #FFFFFF;
+  color: #3C4043;
+  border: 1px solid #DADCE0;
+}
+
+.footer {
+  margin-top: 25px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.footer a {
+  text-decoration: underline;
+  cursor: pointer;
+}
