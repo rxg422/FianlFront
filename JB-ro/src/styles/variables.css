@@ -1,0 +1,14 @@
+:root {
+  /* Color Palette - 첨부 이미지 기반 */
+  --color-bg-primary: #fdfbf6; /* 따뜻한 베이지/아이보리 톤 */
+  --color-primary-green: #2b5c45; /* 짙은 소나무 녹색 (포인트 컬러) */
+  --color-primary-green-hover: #1e4231;
+  --color-text-main: #333333;
+  --color-text-muted: #666666;
+  --color-border: #e8e4d9;
+  --color-white: #ffffff;
+
+  /* Layout */
+  --max-width: 1560px;
+  --header-height: 96px;
+}

@@ -1,0 +1,53 @@
+.hero {
+  height: 500px;
+  /* 실제 배경 이미지 경로로 변경하세요 */
+  background-image: url('https://source.unsplash.com/1600x900/?korean,traditional,architecture'); 
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.4); 
+  display: flex;
+  align-items: center; /* 세로 가운데 정렬 */
+  justify-content: center; /* 가로 가운데 정렬 추가! */
+}
+
+.content {
+  color: var(--color-white);
+  text-align: center; /* 글자들도 가운데로 예쁘게 정렬되도록 추가! */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.content h2 {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.content p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.aiButton {
+  background-color: var(--color-primary-green);
+  color: var(--color-white);
+  border: none;
+  padding: 15px 30px;
+  font-size: 1.1rem;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.aiButton:hover {
+  background-color: var(--color-primary-green-hover);
+}
