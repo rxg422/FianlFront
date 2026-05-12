@@ -1,0 +1,379 @@
+.page {
+  display: flex;
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+/* 사이드바 */
+
+.sidebar {
+  width: 270px;
+  padding: 30px 24px;
+  border-right: 1px solid #e5e7eb;
+  background: #fafafa;
+}
+
+.sidebar section {
+  margin-bottom: 34px;
+}
+
+.sidebar h3 {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 14px;
+}
+
+/* 버튼 */
+
+.sideBtn,
+.regionBtn,
+.sortBox {
+  width: 100%;
+  border: 1px solid #d9d9d9;
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.sideBtn {
+  height: 44px;
+  padding: 0 16px;
+  margin-bottom: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.regionBtn {
+  height: 36px;
+  padding: 0 14px;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sortBox {
+  height: 44px;
+  padding: 0 16px;
+  justify-content: space-between;
+  font-weight: 700;
+}
+
+/* 카테고리 컬러 */
+
+.active {
+  background: #e8f7ef;
+  border-color: #83c5a3;
+  color: #107a45;
+}
+
+.blue {
+  background: #eef5ff;
+  border-color: #bfd7ff;
+  color: #2563eb;
+}
+
+.orange {
+  background: #fff4eb;
+  border-color: #ffd4b0;
+  color: #ea580c;
+}
+
+.purple {
+  background: #f3edff;
+  border-color: #d7c7ff;
+  color: #7c3aed;
+}
+
+.activeRegion {
+  background: #e8f7ef;
+  border-color: #83c5a3;
+  color: #107a45;
+}
+
+/* 콘텐츠 */
+
+.content {
+  flex: 1;
+  padding: 28px 34px;
+}
+
+/* 검색창 */
+
+.searchBox {
+  height: 54px;
+  border: 1px solid #9ecfb7;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  margin-bottom: 28px;
+}
+
+.searchBox input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 16px;
+}
+
+/* 상단 */
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.topBar h2 {
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.topBar h2 span {
+  font-size: 14px;
+  color: #666;
+  margin-left: 10px;
+}
+
+/* 정렬 */
+
+.sortArea {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sortArea select {
+  height: 42px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 8px;
+  padding: 0 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.emptyText {
+  margin-top: 40px;
+  text-align: center;
+  color: #777;
+  font-size: 15px;
+}
+
+/* 카드 그리드 */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+}
+
+/* 카드 */
+
+.card {
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  overflow: hidden;
+  background: white;
+  transition: 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* 이미지 */
+
+.imageWrap {
+  position: relative;
+  height: 180px;
+}
+
+.imageWrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 찜 버튼 */
+
+.heartBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  color: rgb(204, 27, 27);
+  cursor: pointer;
+  padding: 0;
+}
+
+/* 카드 내용 */
+
+.cardBody {
+  padding: 14px;
+}
+
+.cardBody h3 {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.cardBody p {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+/* 뱃지 */
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.attraction {
+  background: #e8f7ef;
+  color: #107a45;
+}
+
+.hotel {
+  background: #eef5ff;
+  color: #2563eb;
+}
+
+.food {
+  background: #fff4eb;
+  color: #ea580c;
+}
+
+.festival {
+  background: #f3edff;
+  color: #7c3aed;
+}
+
+/* 페이징 */
+
+.pagination {
+  margin-top: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.pagination button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.current {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #173c35 !important;
+  color: white;
+  font-weight: 800;
+}
+.active {
+  background: #fff4cc;
+  border-color: #f4d24f;
+  color: #9a6b00;
+}
+
+.attractionBtn {
+  background: #e8f7ef;
+  border-color: #83c5a3;
+  color: #107a45;
+}
+
+.hotelBtn {
+  background: #eef5ff;
+  border-color: #bfd7ff;
+  color: #2563eb;
+}
+
+.foodBtn {
+  background: #fff4eb;
+  border-color: #ffd4b0;
+  color: #ea580c;
+}
+
+.festivalBtn {
+  background: #f3edff;
+  border-color: #d7c7ff;
+  color: #7c3aed;
+}
+.wishActive {
+  background: #e9435a;
+  border-color: #e9435a;
+}
+
+.mapWrapper {
+  position: relative;
+}
+
+.mapViewButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+  height: 40px;
+  padding: 0 15px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f26b21;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 2px 9px rgba(0, 0, 0, 0.08);
+}
+
+.routeButton {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 5;
+  height: 40px;
+  padding: 0 17px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0f7b51;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 2px 9px rgba(0, 0, 0, 0.08);
+}
+.resetBtn {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid #e4e4e4;
+  background: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.resetBtn:hover {
+  background: #f5f5f5;
+}

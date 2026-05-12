@@ -1,0 +1,905 @@
+/* =============================================
+   CourseDetail.module.css
+   app/course/[id]/CourseDetail.module.css
+   ============================================= */
+
+:root {
+  --gold: #c8922a;
+  --gold-light: #f5ede0;
+  --gold-border: #e8d5b0;
+  --text-dark: #2a1f0a;
+  --text-mid: #5a4a2e;
+  --text-soft: #9a8060;
+  --bg-cream: #faf7f2;
+  --bg-white: #ffffff;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 4px rgba(0,0,0,0.07);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+}
+
+/* 페이지 */
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 36px 24px 80px;
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+  color: var(--text-dark);
+}
+
+/* 이미지 밖 상단 sticky 영역 */
+.topStickyArea {
+  position: sticky;
+  top: var(--header-height, 102px);
+  z-index: 10;
+
+  width: 100%;
+  background: #fdfbf6;
+
+  padding: 10px 0 12px;
+  margin-bottom: 8px;
+}
+
+.backText {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: var(--text-dark);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.backText:hover {
+  text-decoration: underline;
+}
+
+/* 없는 코스 */
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 20px;
+  color: var(--text-mid);
+}
+
+.notFound button {
+  padding: 10px 24px;
+  background: var(--gold);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* =============================================
+   Hero
+   ============================================= */
+
+.hero {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 6.5;
+  overflow: hidden;
+  border-radius: 24px;
+  margin-top: 0;
+  margin-bottom: 38px;
+  background: #eee7dc;
+}
+
+.heroBg {
+  position: absolute;
+  inset: 0;
+}
+
+.heroBg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 45%;
+  display: block;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  padding: 28px 44px 34px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
+
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.28) 0%,
+    rgba(0, 0, 0, 0.12) 32%,
+    rgba(0, 0, 0, 0.03) 55%,
+    rgba(0, 0, 0, 0) 75%
+  );
+}
+
+.heroTop {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s;
+}
+
+.backBtn:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.heroBottom {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.heroBadge {
+  display: inline-flex;
+  width: fit-content;
+  max-width: max-content;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+  margin-bottom: 12px;
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  color: #fff;
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1.15;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.58);
+}
+
+.heroSub {
+  margin: 0 0 18px;
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 17px;
+  font-weight: 700;
+  font-style: italic;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.58);
+}
+
+.heroMeta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.heroMeta span {
+  font-size: 12px;
+  color: rgba(255,255,255,0.95);
+  background: rgba(255,255,255,0.18);
+  padding: 5px 13px;
+  border-radius: 20px;
+  backdrop-filter: blur(6px);
+}
+
+/* 코스 소개 */
+.introSection {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 28px;
+  align-items: start;
+  background: var(--bg-cream);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  margin-bottom: 32px;
+}
+
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+.introText h2 {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+
+.introText p {
+  font-size: 13.5px;
+  line-height: 1.9;
+  color: var(--text-mid);
+  margin: 0;
+}
+
+.historyCard {
+  background: var(--text-dark);
+  border-radius: var(--radius-md);
+  padding: 24px 20px;
+  color: #fff;
+}
+
+.historyYear {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--gold);
+  margin-bottom: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.historySummary {
+  font-size: 13px;
+  line-height: 1.75;
+  color: rgba(255,255,255,0.82);
+  margin: 0;
+}
+
+/* 메인 그리드 */
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 48px;
+}
+
+/* 섹션 타이틀 */
+.sectionTitle {
+  margin-bottom: 20px;
+}
+
+.sectionTitle h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0 0 4px;
+}
+
+.sectionTitle p {
+  font-size: 13px;
+  color: var(--text-soft);
+  margin: 0;
+}
+
+/* 아코디언 */
+.accordionList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.accordionItem {
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-white);
+}
+
+.accordionHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 18px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  border-left: 3px solid var(--day-color, var(--gold));
+}
+
+.accordionHeader:hover,
+.accordionOpen {
+  background: var(--gold-light);
+}
+
+.accordionHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dayBadge {
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 8px;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.dayTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.dayPlaceCount {
+  font-size: 11px;
+  color: var(--text-soft);
+  background: var(--gold-light);
+  border: 1px solid var(--gold-border);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.accordionChevron {
+  font-size: 12px;
+  color: var(--text-soft);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chevronUp {
+  transform: rotate(180deg);
+}
+
+/* ── DAY별 스크롤 바디 ── */
+.accordionBody {
+  padding: 4px 18px 18px;
+  overflow-y: auto;
+  max-height: none; /* 자연스럽게 펼쳐지고, 페이지 자체 스크롤로 처리 */
+}
+
+/* 장소 목록 */
+.placeList {
+  display: flex;
+  flex-direction: column;
+}
+
+.placeRow {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 14px;
+  padding: 14px 0;
+}
+
+.placeTimeline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 2px;
+}
+
+.orderBadge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.timelineLine {
+  width: 2px;
+  flex: 1;
+  min-height: 16px;
+  border-left: 2px dashed;
+  opacity: 0.35;
+  margin-top: 5px;
+}
+
+/* ── 장소 카드 — 와이드 이미지 형태 ── */
+.placeCard {
+  display: grid;
+  grid-template-columns: 220px 1fr;   /* ← 이미지 145→220px로 확대 */
+  gap: 16px;
+
+  background: var(--bg-cream);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+
+  min-height: 150px;                  /* ← 높이 185→150px로 축소 */
+}
+
+.placeImg {
+  position: relative;
+  width: 220px;                       /* ← 145→220px */
+  height: 100%;
+  min-height: 150px;                  /* ← 185→150px */
+
+  overflow: hidden;
+  background: var(--gold-light);
+}
+
+.placeImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.noApiBadge {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(0, 0, 0, 0.58);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.placeInfo {
+  padding: 14px 18px 14px 0;
+  min-width: 0;
+}
+
+.placeTop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.placeTop h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.placeTag {
+  font-size: 10px;
+  background: #fff;
+  color: var(--gold);
+  border: 1px solid var(--gold-border);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.placeDesc {
+  font-size: 12.5px;
+  color: var(--text-mid);
+  line-height: 1.65;
+  margin: 0 0 10px;
+  /* 카드 높이가 낮아졌으므로 설명 텍스트 2줄 클램프 */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.placeDl {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0 0 10px;
+}
+.placeDl > div {
+  display: flex;
+  gap: 10px;
+  font-size: 12px;
+  color: #888;
+  align-items: flex-start;
+}
+
+.placeDl dt {
+  color: #c8a060;
+  font-weight: 600;
+  min-width: 52px;
+  flex-shrink: 0;
+}
+
+.placeDl dd {
+  margin: 0;
+}
+
+.placeActions {
+  display: flex;
+  gap: 8px;
+}
+
+.placeActions button {
+  padding: 5px 12px;
+  border: 1px solid var(--gold-border);
+  background: #fff;
+  color: var(--text-mid);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+
+.placeActions button:hover {
+  background: var(--gold);
+  color: #fff;
+  border-color: var(--gold);
+}
+
+/* 이동 정보 */
+.moveInfo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 0 50px;
+  padding: 6px 14px;
+  background: var(--gold-light);
+  border: 1px solid var(--gold-border);
+  border-radius: 20px;
+  width: fit-content;
+  font-size: 12px;
+  color: var(--text-mid);
+  font-weight: 500;
+}
+
+.moveIcon {
+  font-size: 14px;
+}
+
+.moveType {
+  font-weight: 700;
+  color: var(--gold);
+}
+
+/* 사이드바 */
+.sideSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mapCard,
+.infoCard,
+.tipCard {
+  background: var(--bg-white);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+}
+
+.mapCard h3,
+.infoCard h3,
+.tipCard h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 12px;
+}
+
+.mapHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.mapHeader h3 {
+  margin: 0;
+}
+
+.mapDayLegend {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.mapBox {
+  width: 100%;
+  height: 200px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  background: var(--gold-light);
+}
+
+.mapFullBtn {
+  display: block;
+  text-align: center;
+  padding: 9px;
+  background: var(--text-dark);
+  color: var(--gold-light);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.mapFullBtn:hover {
+  background: var(--text-mid);
+}
+
+.infoCard ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.infoCard li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0ebe0;
+  color: var(--text-dark);
+}
+
+.infoCard li:last-child {
+  border-bottom: none;
+}
+
+.infoCard li span {
+  color: var(--text-soft);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.tipCard ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tipCard li {
+  font-size: 12px;
+  color: var(--text-mid);
+  line-height: 1.6;
+  padding-left: 14px;
+  position: relative;
+}
+
+.tipCard li::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  color: var(--gold);
+  font-size: 9px;
+  top: 3px;
+}
+
+/* 인기 여행지 */
+.popularSection {
+  margin-top: 8px;
+}
+
+.popularGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.popularCard {
+  background: var(--bg-white);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: box-shadow 0.15s, transform 0.15s;
+  cursor: pointer;
+}
+
+.popularCard:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.popularImg {
+  width: 100%;
+  height: 110px;
+  background: linear-gradient(135deg, var(--gold-light), var(--gold-border));
+}
+
+.popularCard h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 10px 12px 4px;
+}
+
+.popularCard p {
+  font-size: 11px;
+  color: var(--text-soft);
+  margin: 0 12px 12px;
+  line-height: 1.5;
+}
+
+/* 반응형 */
+@media (max-width: 960px) {
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sideSection {
+    order: -1;
+  }
+
+  .mapBox {
+    height: 220px;
+  }
+
+  .introSection {
+    grid-template-columns: 1fr;
+  }
+
+  .popularGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 24px 16px 60px;
+  }
+
+  .hero {
+    aspect-ratio: 16 / 9.5;
+    margin-top: 18px;
+    margin-bottom: 28px;
+  }
+
+  .heroOverlay {
+    padding: 20px 22px 24px;
+  }
+
+  .hero h1 {
+    font-size: 28px;
+  }
+
+  .heroSub {
+    font-size: 14px;
+  }
+
+  .heroMeta span {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .placeCard {
+    grid-template-columns: 1fr;
+    grid-template-rows: 140px auto;
+  }
+
+  .placeImg {
+    width: 100%;
+    height: 140px;
+    min-height: 0;
+  }
+
+  .placeImg img {
+    min-height: 0;
+  }
+
+  .moveInfo {
+    margin-left: 36px;
+  }
+
+  .popularGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── 상세정보 모달 ── */
+.detailModalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.detailModal {
+  width: 80vw;
+  height: 82vh;
+  background: #fff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+
+.detailModalHeader {
+  height: 56px;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #eee2cf;
+  background: #fffaf2;
+}
+
+.detailModalHeader button {
+  border: 0;
+  background: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.detailModalFrame {
+  width: 100%;
+  height: calc(100% - 56px);
+  border: 0;
+}
+
+/* ── 인기 여행지 카테고리 뱃지 ── */
+.popularCategory {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  margin-top: 14px;
+  margin-left: 14px;
+
+  padding: 4px 10px;
+
+  border-radius: 8px;
+
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+
+  border: 1px solid transparent;
+}
+
+.categoryAttraction {
+  background: #e8f7ef;
+  border-color: #b7e4cb;
+  color: #17834f;
+}
+
+.categoryFood {
+  background: #fff4eb;
+  border-color: #ffd7b8;
+  color: #ea580c;
+}
+
+.categoryStay {
+  background: #eef5ff;
+  border-color: #cfe0ff;
+  color: #2563eb;
+}
+
+.categoryCafe {
+  background: #fff1f7;
+  border-color: #ffd0e3;
+  color: #d9468f;
+}

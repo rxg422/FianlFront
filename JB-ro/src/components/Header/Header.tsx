@@ -65,7 +65,7 @@ const Header = () => {
                 <span className={styles.dropbtn}>역사</span>
                 <ul className={styles.dropdownContent}>
                   <li><Link href="/historyAI">챗봇</Link></li>
-                  <li><Link href="/history">코스 추천</Link></li>
+                  <li><Link href="/course">코스 추천</Link></li>
                 </ul>
               </li>
 
