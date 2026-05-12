@@ -1,3 +1,67 @@
+/* ════════════════════════════════════════════════════════════
+   계절 파티클 키프레임
+   ════════════════════════════════════════════════════════════ */
+@keyframes sakuraFall {
+  0%   { transform: translateY(-10px) rotate(0deg) translateX(0);      opacity: 0; }
+  8%   { opacity: 0.82; }
+  80%  { opacity: 0.65; }
+  100% { transform: translateY(800px) rotate(280deg) translateX(40px); opacity: 0; }
+}
+
+@keyframes leafSway {
+  0%   { transform: translateY(-10px) rotate(-18deg) translateX(0);     opacity: 0; }
+  8%   { opacity: 0.72; }
+  50%  { transform: translateY(400px) rotate(12deg) translateX(-18px);  opacity: 0.65; }
+  100% { transform: translateY(800px) rotate(44deg) translateX(28px);   opacity: 0; }
+}
+
+@keyframes leafRise {
+  0%   { transform: translateY(800px) rotate(10deg);                    opacity: 0; }
+  8%   { opacity: 0.58; }
+  100% { transform: translateY(-10px) rotate(-22deg) translateX(14px);  opacity: 0; }
+}
+
+@keyframes snowDrift {
+  0%   { transform: translateY(-8px) translateX(0);     opacity: 0; }
+  8%   { opacity: 0.88; }
+  50%  { transform: translateY(400px) translateX(14px); opacity: 0.7; }
+  100% { transform: translateY(800px) translateX(-9px); opacity: 0; }
+}
+
+/* 파티클 애니메이션 클래스 — className으로 적용 */
+.pSakura {
+  position: absolute;
+  display: inline-block;
+  opacity: 0;
+  animation: sakuraFall var(--dur, 6s) var(--delay, 0s) ease-in infinite;
+  animation-fill-mode: both;
+}
+
+.pLeafSway {
+  position: absolute;
+  display: inline-block;
+  opacity: 0;
+  animation: leafSway var(--dur, 6s) var(--delay, 0s) ease-in infinite;
+  animation-fill-mode: both;
+}
+
+.pLeafRise {
+  position: absolute;
+  display: inline-block;
+  opacity: 0;
+  animation: leafRise var(--dur, 6s) var(--delay, 0s) ease-out infinite;
+  animation-fill-mode: both;
+}
+
+.pSnow {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(225, 238, 255, 0.88);
+  opacity: 0;
+  animation: snowDrift var(--dur, 7s) var(--delay, 0s) linear infinite;
+  animation-fill-mode: both;
+}
+
 /* ── Hero ─────────────────────────────── */
 .hero {
   height: 760px;
@@ -8,29 +72,84 @@
   overflow: hidden;
 }
 
+/* ── 배너 파티클 레이어 ───────────────── */
+.bannerParticleLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8; /* 틴트(4) 위, 콘텐츠(10) 아래 */
+  overflow: hidden;
+}
+
+/* bannerParticle/aiParticle 클래스는 pSakura/pLeafSway/pLeafRise/pSnow 로 통합됨 */
+
+/* ── Hero 오버레이 틴트 — 배경 그라디언트만 담당, pointer-events 없음 ── */
+.heroOverlayTint {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  /* 기본 (가을) */
+  background: linear-gradient(
+    to right,
+    rgba(20, 32, 26, 0.38) 0%,
+    rgba(20, 32, 26, 0.24) 30%,
+    rgba(20, 32, 26, 0.08) 55%,
+    rgba(20, 32, 26, 0.00) 100%
+  );
+}
+
+.heroOverlayTint_spring {
+  background: linear-gradient(
+    to right,
+    rgba(20, 32, 26, 0.40) 0%,
+    rgba(24, 26, 22, 0.22) 32%,
+    rgba(200, 130, 100, 0.07) 62%,
+    rgba(200, 130, 100, 0.00) 100%
+  );
+}
+
+.heroOverlayTint_summer {
+  background: linear-gradient(
+    to right,
+    rgba(14, 28, 18, 0.42) 0%,
+    rgba(18, 32, 20, 0.22) 36%,
+    rgba(50, 90, 38, 0.06) 66%,
+    rgba(50, 90, 38, 0.00) 100%
+  );
+}
+
+.heroOverlayTint_autumn {
+  background: linear-gradient(
+    to right,
+    rgba(22, 18, 10, 0.42) 0%,
+    rgba(28, 22, 12, 0.26) 32%,
+    rgba(150, 72, 16, 0.07) 62%,
+    rgba(150, 72, 16, 0.00) 100%
+  );
+}
+
+.heroOverlayTint_winter {
+  background: linear-gradient(
+    to right,
+    rgba(10, 16, 28, 0.44) 0%,
+    rgba(16, 22, 36, 0.26) 36%,
+    rgba(70, 100, 160, 0.08) 66%,
+    rgba(70, 100, 160, 0.00) 100%
+  );
+}
+
+/* ── Hero 오버레이 — flex 콘텐츠 레이아웃만 담당 ── */
 .heroOverlay {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(
-      circle at 18% 48%,
-      rgba(219, 203, 142, 0.58) 0%,
-      rgba(247, 220, 123, 0.38) 23%,
-      rgba(247, 220, 123, 0.16) 42%,
-      rgba(247, 220, 123, 0) 68%
-    ),
-    linear-gradient(
-      to right,
-      rgba(241, 228, 173, 0.72) 0%,
-      rgba(246, 201, 75, 0.34) 28%,
-      rgba(255, 255, 255, 0.08) 58%,
-      rgba(255, 255, 255, 0) 100%
-    );
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 56px;
   padding: 0 8%;
+  z-index: 10; /* 틴트(4) + 파티클(8) 위 */
+  background: none;   /* 배경 없음 — 틴트 레이어가 담당 */
 }
 
 .heroContent {
@@ -42,7 +161,7 @@
 
 .heroEyebrow {
   font-size: 1rem;
-  color: #a16203cc;
+  color: #ff9a02cc;
   letter-spacing: 0.06em;
   margin-bottom: 14px;
   font-weight: 500;
@@ -74,7 +193,7 @@
 
 .heroKeywordLabel {
   font-size: 0.78rem;
-  color: #a16203cc;
+  color: #ff9a02cc;
   letter-spacing: 0.08em;
   margin-bottom: 10px;
   font-weight: 500;
@@ -249,22 +368,95 @@
   text-decoration: underline;
 }
 
-/* ── AI 여행 추천 ────────────────────── */
+/* ════════════════════════════════════════════════════════════
+   AI 여행 추천 섹션 — 계절 테마
+   ════════════════════════════════════════════════════════════ */
 .aiSection {
-  background: linear-gradient(135deg, #f4f1ea 0%, #ede9df 100%);
   border-radius: 20px;
   padding: 48px 64px;
   border: 1px solid #e0dbd0;
   margin-bottom: 80px;
+  position: relative;
+  overflow: hidden;
+  /* 기본(가을) */
+  background: linear-gradient(135deg, #f4f1ea 0%, #ede9df 100%);
+  transition: background 0.6s ease, border-color 0.6s ease;
 }
 
+/* 봄 */
+.aiSection_spring {
+  background: linear-gradient(135deg, #f7f0ea 0%, #f0e6da 60%, #ece0d4 100%);
+  border-color: #e8d0bc;
+}
+
+/* 여름 */
+.aiSection_summer {
+  background: linear-gradient(135deg, #eef3e6 0%, #e5ecd8 60%, #dde6cc 100%);
+  border-color: #c6d9b4;
+}
+
+/* 가을 */
+.aiSection_autumn {
+  background: linear-gradient(135deg, #f5efe2 0%, #ede4ce 60%, #e8dcca 100%);
+  border-color: #d8c49a;
+}
+
+/* 겨울 */
+.aiSection_winter {
+  background: linear-gradient(135deg, #eef0f6 0%, #e6e8f2 60%, #dde0ee 100%);
+  border-color: #c2cce0;
+}
+
+/* 배경 글로우 (우측 방사형 틴트) */
+.aiGlowLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  transition: background 0.7s ease;
+}
+
+.aiGlowLayer_spring {
+  background: radial-gradient(ellipse 68% 88% at 85% 52%, rgba(230, 160, 140, 0.16) 0%, transparent 70%);
+}
+
+.aiGlowLayer_summer {
+  background: radial-gradient(ellipse 65% 85% at 83% 50%, rgba(90, 150, 55, 0.12) 0%, transparent 70%);
+}
+
+.aiGlowLayer_autumn {
+  background: radial-gradient(ellipse 68% 88% at 84% 50%, rgba(185, 105, 28, 0.13) 0%, transparent 70%);
+}
+
+.aiGlowLayer_winter {
+  background: radial-gradient(ellipse 65% 85% at 83% 50%, rgba(90, 120, 196, 0.11) 0%, transparent 70%);
+}
+
+/* AI 파티클 레이어 — 우측 55%에만 가둠 */
+.aiParticleLayer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 55%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 1;
+}
+
+
+
+/* AI 섹션 내부 콘텐츠 레이어 */
 .aiTop {
+  position: relative;
+  z-index: 2;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 20px;
 }
 
+/* 뱃지 */
 .aiLabel {
   display: inline-block;
   font-size: 0.78rem;
@@ -276,7 +468,13 @@
   padding: 4px 14px;
   border-radius: 20px;
   margin-bottom: 14px;
+  transition: background 0.5s, color 0.5s;
 }
+
+.aiLabel_spring { background: #fde6d4; color: #9a4828; }
+.aiLabel_summer { background: #d4eccc; color: #2a5e1e; }
+.aiLabel_autumn { background: #f0ddb6; color: '#8a4e10'; }
+.aiLabel_winter { background: #dae2f4; color: #2a3e80; }
 
 .aiTitle {
   font-size: 1.9rem;
@@ -290,6 +488,52 @@
   color: var(--color-text-muted);
 }
 
+/* 계절 추천 키워드 칩 */
+.aiSeasonChips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.aiSeasonChip {
+  font-size: 0.8rem;
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+  cursor: default;
+  transition: background 0.5s, color 0.5s, border-color 0.5s;
+  /* 기본 */
+  background: rgba(160, 120, 60, 0.13);
+  color: #7a4e18;
+  border-color: rgba(160, 120, 60, 0.28);
+}
+
+.aiSeasonChip_spring {
+  background: rgba(228, 160, 145, 0.18);
+  color: #8a3820;
+  border-color: rgba(210, 135, 120, 0.34);
+}
+
+.aiSeasonChip_summer {
+  background: rgba(90, 150, 55, 0.14);
+  color: #2b5e1e;
+  border-color: rgba(75, 130, 48, 0.28);
+}
+
+.aiSeasonChip_autumn {
+  background: rgba(190, 105, 26, 0.15);
+  color: #7a3e0e;
+  border-color: rgba(170, 90, 22, 0.30);
+}
+
+.aiSeasonChip_winter {
+  background: rgba(90, 118, 196, 0.13);
+  color: #26407e;
+  border-color: rgba(75, 100, 176, 0.26);
+}
+
+/* AI 시작 버튼 — 계절별 */
 .aiStartBtn {
   background: #f7dc7b;
   color: #2B2118;
@@ -301,12 +545,21 @@
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: background 0.2s;
+  transition: background 0.4s, color 0.4s;
+  position: relative;
+  z-index: 2;
 }
 
-.aiStartBtn:hover {
-  background: #f5d574;
-}
+.aiStartBtn:hover { filter: brightness(0.95); }
+
+.aiStartBtn_spring { background: #f7dc7b; color: #2B2118; }
+.aiStartBtn_summer { background: #52921e; color: #ffffff; }
+.aiStartBtn_autumn { background: #c07020; color: #ffffff; }
+.aiStartBtn_winter { background: #2e50a0; color: #ffffff; }
+
+.aiStartBtn_summer:hover { background: #437c18; }
+.aiStartBtn_autumn:hover { background: #a85e18; }
+.aiStartBtn_winter:hover { background: #253e88; }
 
 /* ── 2열 레이아웃: 좌(메인) | 우(역사 sticky) ── */
 .twoColLayout {
@@ -322,7 +575,7 @@
   flex-direction: column;
 }
 
-/* ── 여행 코스 그리드 (3열 · 한 줄) ──── */
+/* ── 여행 코스 그리드 ────────────────── */
 .courseGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -345,9 +598,7 @@
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
 }
 
-.courseImageWrap {
-  position: relative;
-}
+.courseImageWrap { position: relative; }
 
 .courseImage {
   height: 210px;
@@ -493,9 +744,7 @@
   transition: background 0.2s;
 }
 
-.historyDetailBtn:hover {
-  background: #f5d574;
-}
+.historyDetailBtn:hover { background: #f5d574; }
 
 /* ── 인기 유적지 카드 그리드 ─────────── */
 .popularGrid {
@@ -541,9 +790,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-.popularCardBody {
-  padding: 12px 14px 14px;
-}
+.popularCardBody { padding: 12px 14px 14px; }
 
 .popularCardName {
   font-size: 1.05rem;
@@ -685,7 +932,7 @@
   border-radius: 4px;
 }
 
-/* ── Promo Banner ── */
+/* ── Promo Banner ─────────────────────── */
 .promoBanner {
   max-width: 1300px;
   margin: 0 auto 72px;
@@ -754,9 +1001,7 @@
   transition: background 0.2s;
 }
 
-.modalClose:hover {
-  background: rgba(0, 0, 0, 0.16);
-}
+.modalClose:hover { background: rgba(0, 0, 0, 0.16); }
 
 .modalImage {
   width: 100%;
@@ -765,9 +1010,7 @@
   margin-top: -52px;
 }
 
-.modalBody {
-  padding: 28px 36px 40px;
-}
+.modalBody { padding: 28px 36px 40px; }
 
 .modalMeta {
   display: flex;
@@ -786,10 +1029,7 @@
 }
 
 .modalDate,
-.modalPlace {
-  font-size: 0.85rem;
-  color: #888;
-}
+.modalPlace { font-size: 0.85rem; color: #888; }
 
 .modalTitle {
   font-size: 1.7rem;
@@ -846,27 +1086,14 @@
 
 /* ── 반응형 ──────────────────────────── */
 @media (max-width: 1200px) {
-  .heroOverlay {
-    padding: 0 5%;
-    gap: 28px;
-  }
-  .mapOverlay {
-    width: min(680px, 50vw);
-  }
-  .twoColLayout {
-    grid-template-columns: 1fr 290px;
-    gap: 24px;
-  }
-  .popularGrid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+  .heroOverlay { padding: 0 5%; gap: 28px; }
+  .mapOverlay  { width: min(680px, 50vw); }
+  .twoColLayout { grid-template-columns: 1fr 290px; gap: 24px; }
+  .popularGrid  { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (max-width: 1024px) {
-  .hero {
-    height: auto;
-    min-height: 900px;
-  }
+  .hero { height: auto; min-height: 900px; }
   .heroOverlay {
     position: relative;
     flex-direction: column;
@@ -874,45 +1101,26 @@
     align-items: flex-start;
     padding: 100px 6% 70px;
   }
-  .mapOverlay {
-    width: 100%;
-    max-width: 720px;
-    height: 540px;
-    align-self: center;
-  }
-  .twoColLayout {
-    grid-template-columns: 1fr;
-  }
-  .historyCard {
-    position: static;
-  }
-  .popularGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .eventSlide {
-    grid-template-columns: 200px 1fr;
-  }
+  .mapOverlay   { width: 100%; max-width: 720px; height: 540px; align-self: center; }
+  .twoColLayout { grid-template-columns: 1fr; }
+  .historyCard  { position: static; }
+  .popularGrid  { grid-template-columns: repeat(2, 1fr); }
+  .eventSlide   { grid-template-columns: 200px 1fr; }
+  .aiSection    { padding: 40px 48px; }
 }
 
 @media (max-width: 768px) {
   .hero { min-height: 850px; }
-  .heroTitle { font-size: 2.4rem; white-space: normal; }
-  .heroOverlay { padding: 80px 6% 50px; }
-  .mapOverlay { height: 430px; }
+  .heroTitle    { font-size: 2.4rem; white-space: normal; }
+  .heroOverlay  { padding: 80px 6% 50px; }
+  .mapOverlay   { height: 430px; }
   .mapRegionText { font-size: 15px; }
-
-  .courseGrid {
-    grid-template-columns: 1fr;
-  }
-  .popularGrid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .aiSection { padding: 32px 24px; }
-  .aiTop { flex-direction: column; align-items: flex-start; }
-
-  .eventSlide { grid-template-columns: 1fr; }
+  .courseGrid   { grid-template-columns: 1fr; }
+  .popularGrid  { grid-template-columns: 1fr 1fr; }
+  .aiSection    { padding: 32px 24px; }
+  .aiTop        { flex-direction: column; align-items: flex-start; }
+  .eventSlide   { grid-template-columns: 1fr; }
   .eventSlideImg { height: 160px; }
-
-  .modalBody { padding: 20px 22px 32px; }
-  .modalTitle { font-size: 1.35rem; }
+  .modalBody    { padding: 20px 22px 32px; }
+  .modalTitle   { font-size: 1.35rem; }
 }
