@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -54,6 +55,27 @@ interface SvgRegion {
   labelY: number;
 }
 
+interface Particle {
+  id: number;
+  left: number;
+  delay: number;
+  duration: number;
+  size: number;
+  extra: number;
+}
+
+// ── 계절 타입 ─────────────────────────────────────────────────
+type Season = 'spring' | 'summer' | 'autumn' | 'winter';
+
+// ── 계절 감지 ─────────────────────────────────────────────────
+const getSeason = (): Season => {
+  const m = new Date().getMonth() + 1;
+  if (m >= 3 && m <= 5)  return 'spring';
+  if (m >= 6 && m <= 8)  return 'summer';
+  if (m >= 9 && m <= 11) return 'autumn';
+  return 'winter';
+};
+
 // ── 상수 ─────────────────────────────────────────────────────
 const getDayIndex = (): number => {
   const now = new Date();
@@ -69,6 +91,14 @@ const AI_DAILY_KEYWORDS: string[][] = [
   ['새벽 시장', '농촌 체험', '갯벌 생태', '판소리 공연'],
   ['겨울 설경', '온돌 민박', '남도 음식', '전통 주막'],
 ];
+
+// 계절별 AI 섹션 추천 키워드
+const SEASON_AI_KEYWORDS: Record<Season, string[]> = {
+  spring: ['한옥마을 산책', '봄꽃 드라이브', '전통 음식 투어'],
+  summer: ['산사 힐링', '서해안 일몰', '갯벌 생태'],
+  autumn: ['가을 단풍', '고택 숙박', '역사 골목 걷기'],
+  winter: ['겨울 설경', '온돌 민박', '남도 음식'],
+};
 
 const HISTORY_STORIES: HistoryStory[] = [
   {
@@ -153,8 +183,8 @@ const HISTORY_STORIES: HistoryStory[] = [
 ];
 
 const COURSES: Course[] = [
-  { id: 1, name: '경기전',      region: '전주', desc: '조선 왕조의 역사가 깃든 곳',       tag: '역사' },
-  { id: 2, name: '미륵사지',    region: '익산', desc: '백제 최대의 사찰 터',              tag: '유적' },
+  { id: 1, name: '경기전',       region: '전주', desc: '조선 왕조의 역사가 깃든 곳',       tag: '역사' },
+  { id: 2, name: '미륵사지',     region: '익산', desc: '백제 최대의 사찰 터',              tag: '유적' },
   { id: 3, name: '전주한옥마을', region: '전주', desc: '전통과 현대가 공존하는 랜드마크', tag: '문화' },
 ];
 
@@ -167,11 +197,11 @@ const POPULAR_SITES: PopularSite[] = [
 const RANK_BG: string[] = ['#f59e0b', '#94a3b8', '#b87333', '#c0c0c0'];
 
 const LOCAL_EVENTS: LocalEvent[] = [
-  { id: 1, name: '전주국제영화제',    region: '전주', period: '05.01 – 05.10', tag: '축제', tagBg: '#e8edf7', tagColor: '#2d4a8a', desc: '국내 최대 독립·예술 영화 축제. 전주 일원 영화관과 야외 상영장에서 국내외 수준 높은 작품들을 만나보세요.' },
-  { id: 2, name: '익산 서동축제',     region: '익산', period: '05.15 – 05.17', tag: '문화', tagBg: '#eaf2ee', tagColor: '#2b5c45', desc: '백제 무왕과 신라 선화공주의 애틋한 사랑을 주제로 한 역사 문화 축제. 화려한 퍼레이드와 체험 행사가 진행됩니다.' },
+  { id: 1, name: '전주국제영화제',     region: '전주', period: '05.01 – 05.10', tag: '축제', tagBg: '#e8edf7', tagColor: '#2d4a8a', desc: '국내 최대 독립·예술 영화 축제. 전주 일원 영화관과 야외 상영장에서 국내외 수준 높은 작품들을 만나보세요.' },
+  { id: 2, name: '익산 서동축제',      region: '익산', period: '05.15 – 05.17', tag: '문화', tagBg: '#eaf2ee', tagColor: '#2b5c45', desc: '백제 무왕과 신라 선화공주의 애틋한 사랑을 주제로 한 역사 문화 축제. 화려한 퍼레이드와 체험 행사가 진행됩니다.' },
   { id: 3, name: '고창 청보리밭 축제', region: '고창', period: '04.20 – 05.12', tag: '자연', tagBg: '#e8f5e8', tagColor: '#2d6b2d', desc: '드넓은 청보리밭을 배경으로 봄의 싱그러움을 만끽할 수 있는 축제. 사진 명소로도 유명합니다.' },
   { id: 4, name: '부안 변산 벚꽃축제', region: '부안', period: '04.05 – 04.15', tag: '자연', tagBg: '#fdf0f0', tagColor: '#a04040', desc: '변산반도 일대의 화사한 벚꽃과 바다가 어우러지는 봄 축제. 해안도로 드라이브와 함께 즐기세요.' },
-  { id: 5, name: '남원 춘향제',       region: '남원', period: '05.20 – 05.25', tag: '전통', tagBg: '#f0ede5', tagColor: '#7a5c2e', desc: '춘향전의 고장 남원에서 열리는 전통문화 축제. 판소리 공연, 그네뛰기 등 다채로운 행사가 열립니다.' },
+  { id: 5, name: '남원 춘향제',        region: '남원', period: '05.20 – 05.25', tag: '전통', tagBg: '#f0ede5', tagColor: '#7a5c2e', desc: '춘향전의 고장 남원에서 열리는 전통문화 축제. 판소리 공연, 그네뛰기 등 다채로운 행사가 열립니다.' },
 ];
 
 const TAG_COLORS: Record<string, TagColor> = {
@@ -203,7 +233,7 @@ const JEONBUK_REGION_ORDER: string[] = [
   '부안', '정읍', '임실', '장수', '고창', '순창', '남원',
 ];
 
-const SVG_WIDTH = 760;
+const SVG_WIDTH  = 760;
 const SVG_HEIGHT = 620;
 const SVG_PADDING = 24;
 
@@ -215,8 +245,8 @@ const LABEL_OFFSET: Record<string, { x: number; y: number }> = {
   부안: { x: 10, y: 2 }, 남원: { x: 2, y: 8 },
 };
 
-type Coord = [number, number];
-type Ring = Coord[];
+type Coord   = [number, number];
+type Ring    = Coord[];
 type Polygon = Ring[];
 
 const isCoord = (v: unknown): v is Coord =>
@@ -256,11 +286,8 @@ const collectPoints = (coords: unknown): Coord[] => {
   while (stack.length > 0) {
     const cur = stack.pop();
     if (!Array.isArray(cur)) continue;
-    if (isCoord(cur)) {
-      result.push(cur);
-    } else {
-      cur.forEach(item => stack.push(item));
-    }
+    if (isCoord(cur)) result.push(cur);
+    else cur.forEach(item => stack.push(item));
   }
   return result;
 };
@@ -295,7 +322,9 @@ const makePath = (
         ).join(' ')
     ).join(' ');
 
-const convertGeoJsonToSvgRegions = (geoJson: { features: { properties: Record<string, unknown>; geometry: { type: string; coordinates: unknown } }[] }): SvgRegion[] => {
+const convertGeoJsonToSvgRegions = (geoJson: {
+  features: { properties: Record<string, unknown>; geometry: { type: string; coordinates: unknown } }[]
+}): SvgRegion[] => {
   const features = (geoJson.features || []).filter(f => f.properties.NAME_1 === 'Jeollabuk-do');
   const allPoints = features.flatMap(f =>
     getRenderablePolygons(f.geometry.coordinates, f.geometry.type).flatMap(collectPoints)
@@ -309,10 +338,10 @@ const convertGeoJsonToSvgRegions = (geoJson: { features: { properties: Record<st
   });
 
   const scale = Math.min(
-    (SVG_WIDTH - SVG_PADDING * 2) / (maxX - minX),
+    (SVG_WIDTH  - SVG_PADDING * 2) / (maxX - minX),
     (SVG_HEIGHT - SVG_PADDING * 2) / (maxY - minY)
   );
-  const offsetX = (SVG_WIDTH - (maxX - minX) * scale) / 2;
+  const offsetX = (SVG_WIDTH  - (maxX - minX) * scale) / 2;
   const offsetY = (SVG_HEIGHT - (maxY - minY) * scale) / 2;
 
   const transform = ([lng, lat]: Coord): [number, number] => [
@@ -323,13 +352,13 @@ const convertGeoJsonToSvgRegions = (geoJson: { features: { properties: Record<st
   return features
     .map((f, idx) => {
       const engName = String(f.properties.NAME_2 || '');
-      const name = JEONBUK_NAME_MAP[engName] || engName || `지역${idx + 1}`;
-      const label = getLargestRingCenter(f.geometry.coordinates, f.geometry.type, transform);
-      const offset = LABEL_OFFSET[name] || { x: 0, y: 0 };
+      const name    = JEONBUK_NAME_MAP[engName] || engName || `지역${idx + 1}`;
+      const label   = getLargestRingCenter(f.geometry.coordinates, f.geometry.type, transform);
+      const offset  = LABEL_OFFSET[name] || { x: 0, y: 0 };
       return {
-        id: `${engName}-${idx}`,
+        id:     `${engName}-${idx}`,
         name,
-        d: makePath(f.geometry.coordinates, f.geometry.type, transform),
+        d:      makePath(f.geometry.coordinates, f.geometry.type, transform),
         labelX: label.x + offset.x,
         labelY: label.y + offset.y,
       };
@@ -337,10 +366,230 @@ const convertGeoJsonToSvgRegions = (geoJson: { features: { properties: Record<st
     .sort((a, b) => JEONBUK_REGION_ORDER.indexOf(a.name) - JEONBUK_REGION_ORDER.indexOf(b.name));
 };
 
+// ── 파티클 생성 유틸 ──────────────────────────────────────────
+const makeParticles = (count: number): Particle[] =>
+  Array.from({ length: count }, (_, i) => ({
+    id:       i,
+    left:     Math.random() * 96,
+    delay:    Math.random() * 8,
+    duration: 4 + Math.random() * 5,
+    size:     6 + Math.random() * 8,
+    extra:    Math.random(),
+  }));
+
+// ── 벚꽃 SVG ─────────────────────────────────────────────────
+const SakuraSVG = ({ size, rotation }: { size: number; rotation: number }) => (
+  <svg viewBox="0 0 10 10" width={size} height={size} style={{ transform: `rotate(${rotation}deg)` }}>
+    <ellipse cx="5" cy="2.5" rx="2.2" ry="3.8" fill="rgba(238,185,190,0.78)" transform="rotate(0 5 5)" />
+    <ellipse cx="5" cy="2.5" rx="2.2" ry="3.8" fill="rgba(228,168,175,0.65)" transform="rotate(72 5 5)" />
+    <ellipse cx="5" cy="2.5" rx="2.2" ry="3.8" fill="rgba(243,198,202,0.7)"  transform="rotate(144 5 5)" />
+    <ellipse cx="5" cy="2.5" rx="2.2" ry="3.8" fill="rgba(232,175,180,0.65)" transform="rotate(216 5 5)" />
+    <ellipse cx="5" cy="2.5" rx="2.2" ry="3.8" fill="rgba(238,190,195,0.7)"  transform="rotate(288 5 5)" />
+    <circle cx="5" cy="5" r="1" fill="rgba(248,215,175,0.85)" />
+  </svg>
+);
+
+// 잎사귀 SVG
+const LeafSVG = ({ size, greenVal }: { size: number; greenVal: number }) => (
+  <svg viewBox="0 0 12 15" width={size} height={size * 1.3}>
+    <path d={`M6 14 C6 14 1 9 1 5 C1 2 3 0 6 0 C9 0 11 2 11 5 C11 9 6 14 6 14Z`}
+      fill={`rgba(70,${greenVal + 30},40,0.60)`} />
+    <line x1="6" y1="14" x2="6" y2="1"   stroke={`rgba(50,${greenVal},30,0.35)`} strokeWidth="0.8" />
+    <line x1="6" y1="8"  x2="3" y2="5"   stroke={`rgba(50,${greenVal},30,0.28)`} strokeWidth="0.6" />
+    <line x1="6" y1="8"  x2="9" y2="5"   stroke={`rgba(50,${greenVal},30,0.28)`} strokeWidth="0.6" />
+  </svg>
+);
+
+// 단풍잎 SVG
+const AutumnLeafSVG = ({ size, warm }: { size: number; warm: boolean }) => {
+  const fill = warm
+    ? `rgba(${210 + Math.floor(Math.random() * 35)},${75 + Math.floor(Math.random() * 45)},15,0.70)`
+    : `rgba(${215 + Math.floor(Math.random() * 30)},${145 + Math.floor(Math.random() * 35)},22,0.68)`;
+  return (
+    <svg viewBox="0 0 14 14" width={size} height={size}>
+      <path d="M7 1 C10.5 1 13 3.5 13 7 C13 10.5 10.5 13 7 13 C3.5 13 1 10.5 1 7 C1 3.5 3.5 1 7 1Z"
+        fill={fill} />
+      <line x1="7" y1="1" x2="7" y2="13" stroke="rgba(140,60,10,0.28)" strokeWidth="0.8" />
+      <path d="M7 7 C5 5 2 5 2 5 M7 7 C9 5 12 5 12 5"
+        stroke="rgba(140,60,10,0.22)" strokeWidth="0.6" fill="none" />
+    </svg>
+  );
+};
+
+// ── 계절 파티클 레이어 (배너용) ───────────────────────────────
+const BannerParticles = ({ season, particles }: { season: Season; particles: Particle[] }) => {
+  if (season === 'spring') {
+    return (
+      <>
+        {particles.map(p => (
+          <span
+            key={p.id}
+            className={styles.pSakura}
+            style={{
+              left:  `${p.left}%`,
+              top:   '-12px',
+              '--dur':   `${p.duration}s`,
+              '--delay': `${p.delay}s`,
+            } as React.CSSProperties}
+          >
+            <SakuraSVG size={p.size} rotation={p.extra * 360} />
+          </span>
+        ))}
+      </>
+    );
+  }
+  if (season === 'summer') {
+    return (
+      <>
+        {particles.map(p => (
+          <span
+            key={p.id}
+            className={styles.pLeafRise}
+            style={{
+              left:   `${p.left}%`,
+              bottom: '-10px',
+              top:    'auto',
+              '--dur':   `${p.duration}s`,
+              '--delay': `${p.delay}s`,
+            } as React.CSSProperties}
+          >
+            <LeafSVG size={p.size + 2} greenVal={90 + Math.floor(p.extra * 55)} />
+          </span>
+        ))}
+      </>
+    );
+  }
+  if (season === 'autumn') {
+    return (
+      <>
+        {particles.map(p => (
+          <span
+            key={p.id}
+            className={styles.pLeafSway}
+            style={{
+              left:  `${p.left}%`,
+              top:   '-12px',
+              '--dur':   `${p.duration}s`,
+              '--delay': `${p.delay}s`,
+            } as React.CSSProperties}
+          >
+            <AutumnLeafSVG size={p.size + 2} warm={p.extra > 0.45} />
+          </span>
+        ))}
+      </>
+    );
+  }
+  // winter
+  return (
+    <>
+      {particles.map(p => (
+        <span
+          key={p.id}
+          className={styles.pSnow}
+          style={{
+            left:   `${p.left}%`,
+            top:    '-8px',
+            width:  `${3 + p.extra * 5}px`,
+            height: `${3 + p.extra * 5}px`,
+            '--dur':   `${p.duration + 1}s`,
+            '--delay': `${p.delay}s`,
+          } as React.CSSProperties}
+        />
+      ))}
+    </>
+  );
+};
+
+// ── AI 섹션 파티클 레이어 (우측 절반만) ──────────────────────
+const AiParticles = ({ season, particles }: { season: Season; particles: Particle[] }) => {
+  if (season === 'spring') {
+    return (
+      <>
+        {particles.map(p => (
+          <span
+            key={p.id}
+            className={styles.pSakura}
+            style={{
+              left:  `${p.left}%`,
+              top:   '-10px',
+              '--dur':   `${p.duration}s`,
+              '--delay': `${p.delay}s`,
+            } as React.CSSProperties}
+          >
+            <SakuraSVG size={p.size - 1} rotation={p.extra * 360} />
+          </span>
+        ))}
+      </>
+    );
+  }
+  if (season === 'summer') {
+    return (
+      <>
+        {particles.map(p => (
+          <span
+            key={p.id}
+            className={styles.pLeafRise}
+            style={{
+              left:   `${p.left}%`,
+              bottom: '-10px',
+              top:    'auto',
+              '--dur':   `${p.duration}s`,
+              '--delay': `${p.delay}s`,
+            } as React.CSSProperties}
+          >
+            <LeafSVG size={p.size} greenVal={90 + Math.floor(p.extra * 55)} />
+          </span>
+        ))}
+      </>
+    );
+  }
+  if (season === 'autumn') {
+    return (
+      <>
+        {particles.map(p => (
+          <span
+            key={p.id}
+            className={styles.pLeafSway}
+            style={{
+              left:  `${p.left}%`,
+              top:   '-10px',
+              '--dur':   `${p.duration}s`,
+              '--delay': `${p.delay}s`,
+            } as React.CSSProperties}
+          >
+            <AutumnLeafSVG size={p.size} warm={p.extra > 0.45} />
+          </span>
+        ))}
+      </>
+    );
+  }
+  // winter
+  return (
+    <>
+      {particles.map(p => (
+        <span
+          key={p.id}
+          className={styles.pSnow}
+          style={{
+            left:   `${p.left}%`,
+            top:    '-6px',
+            width:  `${3 + p.extra * 4}px`,
+            height: `${3 + p.extra * 4}px`,
+            '--dur':   `${p.duration + 1}s`,
+            '--delay': `${p.delay}s`,
+          } as React.CSSProperties}
+        />
+      ))}
+    </>
+  );
+};
+
 // ── 컴포넌트 ─────────────────────────────────────────────────
 const Home = () => {
-  const router = useRouter();
-  const dayIdx = getDayIndex();
+  const router   = useRouter();
+  const season   = getSeason();
+  const dayIdx   = getDayIndex();
+
   const dailyKeywords   = AI_DAILY_KEYWORDS[dayIdx % AI_DAILY_KEYWORDS.length];
   const todayHistoryIdx = dayIdx % HISTORY_STORIES.length;
   const todayHistory    = HISTORY_STORIES[todayHistoryIdx];
@@ -351,6 +600,18 @@ const Home = () => {
   const [eventIdx,         setEventIdx]         = useState(0);
   const [activeRegion,     setActiveRegion]     = useState<string | null>(null);
   const [mapRegions,       setMapRegions]       = useState<SvgRegion[]>([]);
+
+  // 파티클은 클라이언트 마운트 후 한 번만 생성 (SSR hydration mismatch 방지)
+  const [bannerParticles, setBannerParticles] = useState<Particle[]>([]);
+  const [aiParticles,     setAiParticles]     = useState<Particle[]>([]);
+
+  useEffect(() => {
+    const bannerCount = season === 'winter' ? 30 : season === 'summer' ? 14 : 22;
+    const aiCount     = season === 'winter' ? 22 : season === 'summer' ? 10 : 16;
+    setBannerParticles(makeParticles(bannerCount));
+    setAiParticles(makeParticles(aiCount));
+  }, [season]);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -362,7 +623,9 @@ const Home = () => {
 
   const moveRegion = (region: string) => {
     setActiveRegion(region);
-    setTimeout(() => router.push(`/travel/list?region=${region}`), 180);
+    setTimeout(() => {
+      router.push(`/travel?region=${encodeURIComponent(region)}`);
+    }, 180);
   };
 
   const startEventTimer = useCallback(() => {
@@ -386,9 +649,22 @@ const Home = () => {
     return () => { document.body.style.overflow = ''; };
   }, [historyModalOpen]);
 
+  const seasonAiKws = SEASON_AI_KEYWORDS[season];
+
   return (
     <>
-      <section className={styles.hero}>
+      {/* ── Hero 배너 ─────────────────────────────────────── */}
+      <section className={`${styles.hero} ${styles[`hero_${season}`]}`}>
+        {/* 1) 계절 그라디언트 오버레이 — pointer-events 없음 */}
+        <div
+          className={`${styles.heroOverlayTint} ${styles[`heroOverlayTint_${season}`]}`}
+          aria-hidden="true"
+        />
+        {/* 2) 파티클 — 오버레이 위, 콘텐츠 아래 */}
+        <div className={styles.bannerParticleLayer} aria-hidden="true">
+          <BannerParticles season={season} particles={bannerParticles} />
+        </div>
+        {/* 3) 콘텐츠 flex 레이아웃 — z-index 최상위 */}
         <div className={styles.heroOverlay}>
           <div className={styles.heroContent}>
             <p className={styles.heroEyebrow}>전북의 역사와 이야기를 따라</p>
@@ -419,7 +695,7 @@ const Home = () => {
               role="img"
               aria-label="전북 지역 선택 지도"
             >
-              {mapRegions.map((region) => (
+              {mapRegions.map(region => (
                 <g
                   key={region.id}
                   className={`${styles.mapRegionGroup} ${activeRegion === region.name ? styles.mapRegionActive : ''}`}
@@ -430,7 +706,7 @@ const Home = () => {
                   <path className={styles.mapRegionPath} d={region.d} />
                 </g>
               ))}
-              {mapRegions.map((region) => (
+              {mapRegions.map(region => (
                 <text key={`label-${region.id}`} x={region.labelX} y={region.labelY} className={styles.mapRegionText}>
                   {region.name}
                 </text>
@@ -442,19 +718,40 @@ const Home = () => {
       </section>
 
       <div className={styles.container}>
-        <section className={styles.aiSection}>
+
+        {/* ── AI 여행 추천 섹션 ─────────────────────────── */}
+        <section className={`${styles.aiSection} ${styles[`aiSection_${season}`]}`}>
+          {/* 배경 글로우 레이어 */}
+          <div className={`${styles.aiGlowLayer} ${styles[`aiGlowLayer_${season}`]}`} aria-hidden="true" />
+          {/* 파티클 레이어 — 우측 절반에만 */}
+          <div className={styles.aiParticleLayer} aria-hidden="true">
+            <AiParticles season={season} particles={aiParticles} />
+          </div>
+
           <div className={styles.aiTop}>
             <div>
-              <span className={styles.aiLabel}>AI 여행 추천</span>
+              <span className={`${styles.aiLabel} ${styles[`aiLabel_${season}`]}`}>AI 여행 추천</span>
               <h3 className={styles.aiTitle}>어떤 여행지를 원하시나요?</h3>
               <p className={styles.aiDesc}>AI 플래너가 당신의 취향에 딱 맞는 전북 여행 코스를 설계해드립니다.</p>
+              {/* 계절별 추천 키워드 칩 */}
+              <div className={styles.aiSeasonChips}>
+                {seasonAiKws.map(kw => (
+                  <span key={kw} className={`${styles.aiSeasonChip} ${styles[`aiSeasonChip_${season}`]}`}>
+                    {kw}
+                  </span>
+                ))}
+              </div>
             </div>
-            <button className={styles.aiStartBtn}>AI 플래너 시작하기 →</button>
+            <button className={`${styles.aiStartBtn} ${styles[`aiStartBtn_${season}`]}`}>
+              AI 플래너 시작하기 →
+            </button>
           </div>
         </section>
 
+        {/* ── 나머지 섹션 (기존과 동일) ──────────────────── */}
         <div className={styles.twoColLayout}>
           <div className={styles.mainCol}>
+
             <section className={styles.section}>
               <div className={styles.sectionHeader}>
                 <div>
@@ -518,7 +815,10 @@ const Home = () => {
                   <div className={styles.eventSlideImg} />
                   <div className={styles.eventSlideBody}>
                     <div className={styles.eventSlideMeta}>
-                      <span className={styles.eventSlideTag} style={{ background: LOCAL_EVENTS[eventIdx].tagBg, color: LOCAL_EVENTS[eventIdx].tagColor }}>
+                      <span
+                        className={styles.eventSlideTag}
+                        style={{ background: LOCAL_EVENTS[eventIdx].tagBg, color: LOCAL_EVENTS[eventIdx].tagColor }}
+                      >
                         {LOCAL_EVENTS[eventIdx].tag}
                       </span>
                       <span className={styles.eventSlidePeriod}>{LOCAL_EVENTS[eventIdx].period}</span>
@@ -561,6 +861,7 @@ const Home = () => {
         </div>
       </div>
 
+      {/* ── 역사 모달 ─────────────────────────────────────── */}
       {historyModalOpen && (
         <div className={styles.modalOverlay} onClick={() => setHistoryModalOpen(false)}>
           <div className={styles.modalPanel} onClick={e => e.stopPropagation()}>
