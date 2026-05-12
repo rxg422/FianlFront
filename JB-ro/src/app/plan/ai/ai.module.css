@@ -1,0 +1,133 @@
+.container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  color: #333;
+}
+
+.header { margin-bottom: 30px; }
+.title { font-size: clamp(1.2rem, 4vw, 1.8rem); font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }
+.subtitle { font-size: 0.9rem; color: #666; line-height: 1.5; }
+
+.filterSection {
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  padding: clamp(15px, 3vw, 30px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+  margin-bottom: 50px;
+  position: relative;
+}
+
+.topInputs {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.inputGroup { display: flex; flex-direction: column; gap: 12px; position: relative; }
+.label { font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; gap: 6px; }
+.label span { font-size: 0.75rem; color: #999; font-weight: 400; }
+
+.durationRow { display: flex; gap: 8px; flex-wrap: wrap; }
+.dBtn { flex: 1; min-width: 80px; padding: 10px; border: 1px solid #eee; border-radius: 8px; background: #fff; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
+.active { background: #1b5e3a; color: #fff; border-color: #1b5e3a; font-weight: 600; }
+
+.regionRow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; min-height: 40px; }
+.selectedRegionBadge {
+  padding: 8px 12px;
+  background: #eef7f2;
+  color: #1b5e3a;
+  border: 1px solid #c2e0cf;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.removeIcon { cursor: pointer; transition: 0.2s; }
+.removeIcon:hover { color: #d00; }
+
+.addRegionBtn {
+  padding: 8px 14px;
+  background: #f4f4f4;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+/* 지역 선택 팝업 */
+.regionPickerContainer {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  width: 100%;
+  max-width: 320px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  padding: 15px;
+  margin-top: 10px;
+}
+.regionPickerHeader { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f0f0f0; }
+.regionGridSmall { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.regionItem { padding: 8px; font-size: 0.8rem; text-align: center; border-radius: 6px; background: #f9f9f9; cursor: pointer; border: 1px solid transparent; }
+.regionItemSelected { background: #1b5e3a; color: white; font-weight: 600; }
+
+/* 여행 스타일 그리드 */
+.styleGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 15px; }
+.styleCard { border: 1px solid #eee; border-radius: 12px; padding: 20px 10px; text-align: center; cursor: pointer; position: relative; transition: 0.2s; }
+.activeStyle { border: 2px solid #1b5e3a; background: #f7fbf8; }
+.check { position: absolute; top: 8px; right: 8px; background: #1b5e3a; color: #fff; width: 18px; height: 18px; border-radius: 50%; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+.styleIcon { font-size: 24px; margin-bottom: 8px; }
+.styleName { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+.styleDescText { font-size: 0.75rem; color: #999; }
+
+.aiBtn { width: 100%; margin-top: 30px; padding: 16px; background: #1b5e3a; color: #fff; border: none; border-radius: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+
+/* 결과 코스 그리드 */
+.courseGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.card { background: #fff; border: 1px solid #eee; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+.imgWrap { position: relative; height: 160px; }
+.imgWrap img { width: 100%; height: 100%; object-fit: cover; }
+.bAi, .bDay { position: absolute; top: 10px; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; color: #fff; }
+.bAi { left: 10px; background: #1b5e3a; }
+.bDay { right: 10px; background: #e85a19; }
+
+.cardInfo { padding: 18px; flex: 1; }
+.cardT { font-size: 1rem; font-weight: 700; margin-bottom: 8px; }
+.cardLoc { font-size: 0.8rem; color: #999; display: flex; align-items: center; gap: 4px; margin-bottom: 12px; }
+.tagRow { display: flex; gap: 6px; margin-bottom: 15px; flex-wrap: wrap; }
+.tag { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+.purple { background: #f3f0ff; color: #7048e8; }
+.pink { background: #fff0f6; color: #d6336c; }
+.blue { background: #e7f5ff; color: #1c7ed6; }
+.orange { background: #fff4e6; color: #fd7e14; }
+.green { background: #ebfbee; color: #37b24d; }
+
+.cardD { font-size: 0.85rem; color: #666; line-height: 1.4; }
+.cardFoot { padding: 12px 18px; border-top: 1px solid #f5f5f5; font-size: 0.85rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+
+.footer { margin-top: 40px; background: #f8f9fa; padding: 15px; border-radius: 8px; display: flex; gap: 10px; align-items: center; font-size: 0.8rem; color: #888; }
+
+/* 반응형 */
+@media (max-width: 1024px) {
+  .styleGrid { grid-template-columns: repeat(3, 1fr); }
+  .courseGrid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .topInputs { grid-template-columns: 1fr; gap: 20px; }
+  .styleGrid { grid-template-columns: repeat(2, 1fr); }
+  .courseGrid { grid-template-columns: 1fr; }
+  .regionPickerContainer { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; }
+}

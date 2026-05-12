@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from './HistoryAI.module.css';
 import { Send, Bot } from 'lucide-react';
-import { getGeminiResponse } from '@/utils/api'; // 이제 이 함수를 실제로 사용합니다!
+import api, { getGeminiResponse } from '@/utils/api'; 
 
 interface Message {
   id: number;
@@ -15,7 +15,7 @@ const History = () => {
     { id: 1, sender: 'bot', text: '안녕하세요! 전북 역사 AI 챗봇입니다. 원하시는 시대나 인물, 지역에 대해 무엇이든 물어보세요.' },
   ]);
   const [inputText, setInputText] = useState('');
-  const [isLoading, setIsLoading] = useState(false); // ★ 로딩 상태 추가 (답변 중일 때 버튼 비활성화용)
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const suggestions = [
@@ -33,17 +33,56 @@ const History = () => {
     scrollToBottom();
   }, [messages]);
 
-  // ★ 수정된 부분: async를 붙여 비동기 함수로 변경
+  /**
+   * [중요] 이전 대화 내역 불러오기 로직
+   */
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const response = await api.get('/api/chat/history');
+        
+        // ★ 오타 수정: response.data.lengeth -> response.data.length
+        if (response.data && response.data.length > 0) {
+          const historyMsgs: Message[] = [];
+          
+          response.data.forEach((item: any) => {
+            // 사용자의 질문 추가
+            historyMsgs.push({ 
+              id: Date.now() + Math.random(), 
+              sender: 'user', 
+              text: item.question 
+            });
+            // AI의 답변 추가
+            historyMsgs.push({ 
+              id: Date.now() + Math.random(), 
+              sender: 'bot', 
+              text: item.answer 
+            });
+          });
+          
+          // 기존 인사말 뒤에 내역 붙이기
+          setMessages(prev => [...prev, ...historyMsgs]);
+        }
+      } catch (error) {
+        console.error("이전 내역 로드 실패:", error);
+      }
+    };
+    loadHistory();
+  }, []);
+
+  /**
+   * 메시지 전송 핸들러
+   */
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
 
     // 1. 사용자 메시지 화면에 추가
     setMessages(prev => [...prev, { id: Date.now(), sender: 'user', text }]);
     setInputText('');
-    setIsLoading(true); // 로딩 시작
+    setIsLoading(true);
 
     try {
-      // 2. ★ 가짜 setTimeout 대신 실제 Gemini API 호출
+      // 2. 실제 AI 호출 (내부적으로 백엔드 저장까지 수행함)
       const aiReply = await getGeminiResponse(text);
 
       // 3. AI 답변을 화면에 추가
@@ -60,7 +99,7 @@ const History = () => {
         text: "죄송합니다. 역사를 조회하는 도중 에러가 발생했습니다. 잠시 후 다시 시도해주세요.",
       }]);
     } finally {
-      setIsLoading(false); // 로딩 종료
+      setIsLoading(false);
     }
   };
 
@@ -82,7 +121,7 @@ const History = () => {
               <div className={styles.messageBubble}>{msg.text}</div>
             </div>
           ))}
-          {/* 로딩 표시 (선택사항) */}
+          {/* 로딩 표시 */}
           {isLoading && (
             <div className={`${styles.messageWrapper} ${styles.isBot}`}>
               <div className={styles.botIcon}><Bot size={18} /></div>
@@ -99,7 +138,7 @@ const History = () => {
                 key={idx} 
                 onClick={() => handleSendMessage(s)} 
                 className={styles.suggestBtn}
-                disabled={isLoading} // 로딩 중에는 클릭 방지
+                disabled={isLoading}
               >
                 {s}
               </button>
@@ -112,7 +151,7 @@ const History = () => {
               placeholder={isLoading ? "답변을 생성 중입니다..." : "궁금한 역사를 물어보세요..."}
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              disabled={isLoading} // 로딩 중에는 입력창 잠금
+              disabled={isLoading}
             />
             <button type="submit" disabled={!inputText.trim() || isLoading} className={styles.sendBtn}>
               <Send size={20} />
