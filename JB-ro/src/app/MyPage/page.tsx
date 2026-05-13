@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import axios from 'axios';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bookmark,
   CalendarDays,
@@ -49,6 +50,27 @@ type PlannerYearFilter = '전체' | '2026' | '2025';
 type ProfileImage = {
   name: string;
   url: string;
+  file?: File;
+};
+
+type MyPageProfile = {
+  id: number;
+  email: string;
+  nickname: string;
+  profile?: string | null;
+  createdAt?: string;
+  status?: string;
+};
+
+type NicknameCheckResponse = {
+  available: boolean;
+  message: string;
+};
+
+type ProfileUpdateResponse = {
+  success: boolean;
+  message: string;
+  profile?: MyPageProfile;
 };
 
 type MenuItem = {
@@ -147,7 +169,7 @@ type StatProps = {
 };
 
 type NicknameCheckStatus = 'idle' | 'validating' | 'available' | 'duplicate' | 'invalid';
-type ToastType = 'success' | 'error';
+type ToastType = 'success' | 'error' | 'info';
 
 type ToastState = {
   type: ToastType;
@@ -292,8 +314,32 @@ const reports: Report[] = [
   { target: '군산 근대문화거리 리뷰', reason: '허위 정보 의심', status: '접수', category: '리뷰', createdAt: '2026.05.01 10:12' },
 ];
 
-const duplicatedNicknames = ['전북멋쟁이', 'admin', 'test', 'JB로드'];
 const allowedProfileImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8081/api';
+
+const resolveProfileImageSrc = (profileUrl?: string | null) => {
+  if (!profileUrl) return '';
+  if (profileUrl.startsWith('data:') || profileUrl.startsWith('blob:')) return profileUrl;
+
+  try {
+    const apiUrl = new URL(API_BASE_URL);
+    const imageUrl = new URL(profileUrl);
+    const contextPath = apiUrl.pathname.replace(/\/$/, '');
+
+    if (
+      contextPath
+      && imageUrl.origin === apiUrl.origin
+      && imageUrl.pathname.startsWith('/uploads/')
+      && !imageUrl.pathname.startsWith(`${contextPath}/uploads/`)
+    ) {
+      imageUrl.pathname = `${contextPath}${imageUrl.pathname}`;
+    }
+
+    return imageUrl.toString();
+  } catch {
+    return profileUrl;
+  }
+};
 
 const recentActivities: Activity[] = [
   { title: '관심 목록 추가', desc: '전주 경기전을 관심 목록에 저장했습니다.', date: '2026.05.04 14:30', targetMenu: 'favorites' },
@@ -306,17 +352,46 @@ type DashboardProps = {
 };
 
 type ProfileCardProps = {
+  profile: MyPageProfile | null;
   profileImageUrl?: string;
 };
 
 type ProfileEditProps = {
+  profile: MyPageProfile | null;
+  onProfileChange: (profile: MyPageProfile) => void;
   profileImage: ProfileImage | null;
   onProfileImageChange: (image: ProfileImage | null) => void;
 };
 
 export default function MyPage() {
   const [activeMenu, setActiveMenu] = useState<MenuId>('dashboard');
+  const [profile, setProfile] = useState<MyPageProfile | null>(null);
   const [profileImage, setProfileImage] = useState<ProfileImage | null>(null);
+
+  const applyProfile = useCallback((nextProfile: MyPageProfile) => {
+    setProfile(nextProfile);
+    setProfileImage(
+      nextProfile.profile
+        ? {
+            name: '현재 프로필 이미지',
+            url: resolveProfileImageSrc(nextProfile.profile),
+          }
+        : null,
+    );
+  }, []);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const response = await axios.get<MyPageProfile>(`${API_BASE_URL}/api/mypage/profile`);
+        applyProfile(response.data);
+      } catch (error) {
+        console.error('마이페이지 프로필 조회 실패', error);
+      }
+    };
+
+    loadProfile();
+  }, [applyProfile]);
 
   const moveMenu = useCallback((menuId: MenuId) => {
     setActiveMenu(menuId);
@@ -333,7 +408,7 @@ export default function MyPage() {
 
       <div className={styles.layout}>
         <aside className={styles.sidebar}>
-          <ProfileCard profileImageUrl={profileImage?.url} />
+          <ProfileCard profile={profile} profileImageUrl={profileImage?.url} />
 
           <nav className={styles.navMenu} aria-label="마이페이지 메뉴">
             {menuItems.map((item) => {
@@ -365,7 +440,12 @@ export default function MyPage() {
 
           {activeMenu === 'dashboard' && <Dashboard onMoveMenu={moveMenu} />}
           {activeMenu === 'profile' && (
-            <ProfileEdit profileImage={profileImage} onProfileImageChange={setProfileImage} />
+            <ProfileEdit
+              profile={profile}
+              onProfileChange={applyProfile}
+              profileImage={profileImage}
+              onProfileImageChange={setProfileImage}
+            />
           )}
           {activeMenu === 'favorites' && <Favorites />}
           {activeMenu === 'planner' && <Planner />}
@@ -393,20 +473,22 @@ function ColorToken({ name, label, value }: ColorTokenProps) {
   );
 }
 
-function ProfileCard({ profileImageUrl }: ProfileCardProps) {
+function ProfileCard({ profile, profileImageUrl }: ProfileCardProps) {
+  const imageUrl = profileImageUrl ?? profile?.profile ?? undefined;
+
   return (
     <div className={styles.profileCard}>
       <div className={styles.avatarWrap}>
         <div className={styles.avatar}>
-          {profileImageUrl ? (
-            <img src={profileImageUrl} alt="프로필 이미지" className={styles.avatarImage} />
+          {imageUrl ? (
+            <img key={imageUrl} src={imageUrl} alt="프로필 이미지" className={styles.avatarImage} />
           ) : (
             '이미지'
           )}
         </div>
       </div>
-      <strong>전북멋쟁이 님</strong>
-      <span>JBStar@kakao.com</span>
+      <strong>{profile?.nickname ?? '회원'} 님</strong>
+      <span>{profile?.email ?? '프로필 정보를 불러오는 중'}</span>
     </div>
   );
 }
@@ -454,13 +536,21 @@ function Dashboard({ onMoveMenu }: DashboardProps) {
   );
 }
 
-function ProfileEdit({ profileImage, onProfileImageChange }: ProfileEditProps) {
+function ProfileEdit({ profile, onProfileChange, profileImage, onProfileImageChange }: ProfileEditProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [nickname, setNickname] = useState('전북멋쟁이');
+  const [nickname, setNickname] = useState(profile?.nickname ?? '');
   const [checkStatus, setCheckStatus] = useState<NicknameCheckStatus>('idle');
   const [checkMessage, setCheckMessage] = useState('닉네임은 한글, 영문, 숫자 2~12자만 사용할 수 있습니다.');
   const [profileImageMessage, setProfileImageMessage] = useState('jpg, png, webp 이미지만 업로드할 수 있습니다.');
   const [toast, setToast] = useState<ToastState>(null);
+
+  useEffect(() => {
+    if (!profile) return;
+
+    setNickname(profile.nickname);
+    setCheckStatus('idle');
+    setCheckMessage('닉네임은 한글, 영문, 숫자 2~12자만 사용할 수 있습니다.');
+  }, [profile]);
 
   const validateNickname = (value: string) => {
     const trimmed = value.trim();
@@ -482,7 +572,7 @@ function ProfileEdit({ profileImage, onProfileImageChange }: ProfileEditProps) {
     setCheckMessage(validationMessage || '중복확인을 진행해주세요.');
   };
 
-  const handleNicknameCheck = () => {
+  const handleNicknameCheck = async () => {
     const validationMessage = validateNickname(nickname);
 
     if (validationMessage) {
@@ -493,16 +583,25 @@ function ProfileEdit({ profileImage, onProfileImageChange }: ProfileEditProps) {
 
     setCheckStatus('validating');
 
-    window.setTimeout(() => {
-      if (duplicatedNicknames.includes(nickname.trim())) {
+    try {
+      const response = await axios.get<NicknameCheckResponse>(
+        `${API_BASE_URL}/api/mypage/profile/nickname-check`,
+        { params: { nickname: nickname.trim() } },
+      );
+
+      if (!response.data.available) {
         setCheckStatus('duplicate');
-        setCheckMessage('이미 사용 중인 닉네임입니다.');
+        setCheckMessage(response.data.message);
         return;
       }
 
       setCheckStatus('available');
-      setCheckMessage('사용 가능한 닉네임입니다.');
-    }, 250);
+      setCheckMessage(response.data.message);
+    } catch (error) {
+      console.error('닉네임 중복확인 실패', error);
+      setCheckStatus('invalid');
+      setCheckMessage('닉네임 중복확인 중 오류가 발생했습니다.');
+    }
   };
 
   const handleProfileImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -525,11 +624,13 @@ function ProfileEdit({ profileImage, onProfileImageChange }: ProfileEditProps) {
       onProfileImageChange({
         name: file.name,
         url: reader.result,
+        file,
       });
       setProfileImageMessage('선택한 이미지는 프로필 영역 크기에 맞춰 자동으로 표시됩니다.');
     };
 
     reader.readAsDataURL(file);
+    event.target.value = '';
   };
 
   const showToast = (nextToast: Exclude<ToastState, null>) => {
@@ -540,21 +641,119 @@ function ProfileEdit({ profileImage, onProfileImageChange }: ProfileEditProps) {
     }, 2400);
   };
 
-  const handleProfileSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleProfileSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (checkStatus !== 'available') {
+    const originalNickname = profile?.nickname.trim() ?? '';
+    const nextNickname = nickname.trim();
+    const isNicknameChanged = nextNickname !== originalNickname;
+    const isProfileImageChanged = Boolean(profileImage?.file);
+
+    if (!isNicknameChanged && !isProfileImageChanged) {
       showToast({
-        type: 'error',
-        message: '수정실패: 닉네임 중복확인을 완료한 뒤 다시 시도해주세요.',
+        type: 'info',
+        message: '변경사항이 없습니다.',
       });
       return;
     }
 
-    showToast({
-      type: 'success',
-      message: '수정완료: 회원정보가 정상적으로 반영되었습니다.',
-    });
+    if (isNicknameChanged) {
+      const validationMessage = validateNickname(nextNickname);
+
+      if (validationMessage) {
+        setCheckStatus('invalid');
+        setCheckMessage(validationMessage);
+        showToast({
+          type: 'error',
+          message: `수정실패: ${validationMessage}`,
+        });
+        return;
+      }
+    }
+
+    if (isNicknameChanged && checkStatus !== 'available') {
+      showToast({
+        type: 'error',
+        message: '수정실패: 닉네임을 변경하려면 중복확인을 먼저 완료해주세요.',
+      });
+      return;
+    }
+
+    try {
+      if (isNicknameChanged) {
+        const response = await axios.put<ProfileUpdateResponse>(`${API_BASE_URL}/api/mypage/profile`, {
+          nickname: nextNickname,
+        });
+
+        if (!response.data.success) {
+          showToast({
+            type: 'error',
+            message: `수정실패: ${response.data.message}`,
+          });
+          return;
+        }
+
+        if (!response.data.profile) {
+          showToast({
+            type: 'error',
+            message: '수정실패: 서버 응답에 프로필 정보가 없습니다.',
+          });
+          return;
+        }
+
+        onProfileChange(response.data.profile);
+      }
+
+      if (isProfileImageChanged && profileImage?.file) {
+        const formData = new FormData();
+        formData.append('profileImage', profileImage.file);
+
+        const imageResponse = await axios.post<ProfileUpdateResponse>(
+          `${API_BASE_URL}/api/mypage/profile/image`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+          },
+        );
+
+        if (!imageResponse.data.success) {
+          showToast({
+            type: 'error',
+            message: `이미지 수정실패: ${imageResponse.data.message}`,
+          });
+          return;
+        }
+
+        if (!imageResponse.data.profile) {
+          showToast({
+            type: 'error',
+            message: '이미지 수정실패: 서버 응답에 프로필 정보가 없습니다.',
+          });
+          return;
+        }
+
+        onProfileChange(imageResponse.data.profile);
+      }
+
+      setCheckStatus('idle');
+      setCheckMessage('닉네임은 한글, 영문, 숫자 2~12자만 사용할 수 있습니다.');
+      showToast({
+        type: 'success',
+        message: isNicknameChanged && isProfileImageChanged
+          ? '수정완료: 닉네임과 프로필 이미지가 모두 변경되었습니다.'
+          : isNicknameChanged
+            ? '수정완료: 닉네임이 변경되었습니다.'
+            : '수정완료: 프로필 이미지가 변경되었습니다.',
+      });
+    } catch (error) {
+      console.error('회원정보 수정 실패', error);
+      showToast({
+        type: 'error',
+        message: '수정실패: 서버 요청 중 오류가 발생했습니다.',
+      });
+    }
   };
 
   const isCheckDisabled = checkStatus === 'invalid' || checkStatus === 'validating';
@@ -598,7 +797,7 @@ function ProfileEdit({ profileImage, onProfileImageChange }: ProfileEditProps) {
         <span>프로필 이미지</span>
         {profileImage && (
           <div className={styles.profilePreview} aria-label="선택한 프로필 이미지 미리보기">
-            <img src={profileImage.url} alt="선택한 프로필 이미지" />
+            <img key={profileImage.url} src={profileImage.url} alt="선택한 프로필 이미지" />
           </div>
         )}
         <div className={styles.inputRow}>
@@ -1367,8 +1566,20 @@ function FAQ() {
     <section className={styles.panel}>
       {[
         ['회원정보는 어디서 수정하나요?', '마이페이지의 회원정보 수정 메뉴에서 닉네임과 프로필 이미지를 수정할 수 있습니다.'],
+        ['프로필 이미지는 어떤 형식만 업로드할 수 있나요?', '프로필 이미지는 jpg, png, webp 형식만 업로드할 수 있습니다. 선택한 이미지는 프로필 영역 크기에 맞춰 자동으로 표시됩니다.'],
+        ['닉네임 중복확인은 꼭 해야 하나요?', '닉네임을 변경하는 경우에만 중복확인이 필요합니다. 닉네임을 그대로 두고 프로필 이미지만 변경할 때는 중복확인을 하지 않아도 됩니다.'],
         ['관심 목록은 추천에 사용되나요?', '관심 등록한 관광지는 개인화 추천 조건으로 활용할 수 있습니다.'],
+        ['관심 목록에는 어떤 콘텐츠를 저장할 수 있나요?', '관광지, 숙소, 식당, 행사 정보를 관심 목록에 저장할 수 있습니다. 저장한 항목은 카테고리별로 분류해서 확인할 수 있습니다.'],
+        ['관심 목록에서 삭제하면 다시 복구할 수 있나요?', '현재 화면에서는 더미데이터 기준으로 동작하지만, 실제 구현 시에는 삭제 전 확인 팝업을 제공하고 서버 데이터도 함께 삭제하는 방식으로 처리하는 것이 좋습니다.'],
+        ['나의 여행 플래너는 어떤 기능인가요?', '관심 목록이나 검색 결과를 기반으로 DAY별 여행 일정을 구성하는 기능입니다. 일정 추가, 일정 삭제, 공개 여부 변경, 상세보기 모달을 제공하는 구조로 설계했습니다.'],
+        ['플래너 공개와 비공개의 차이는 무엇인가요?', '공개 플래너는 다른 사용자가 참고할 수 있는 여행 일정이고, 비공개 플래너는 본인만 확인할 수 있는 개인 일정입니다.'],
+        ['리뷰는 어디에서 관리하나요?', '마이페이지의 나의 리뷰 메뉴에서 작성한 리뷰 목록을 확인할 수 있습니다. 실제 구현 시 리뷰 수정, 삭제, 상세 이동 기능을 연결할 수 있습니다.'],
+        ['신고내역 상태는 어떻게 구분되나요?', '신고내역은 전체, 접수, 처리중, 처리완료 상태로 구분됩니다. 사용자는 본인이 신고한 내용의 처리 흐름을 확인할 수 있습니다.'],
+        ['신고가 처리완료되면 알림을 받을 수 있나요?', '현재는 화면 더미데이터로만 구성되어 있지만, 실제 서비스에서는 처리 상태가 변경될 때 알림 또는 마이페이지 상태 표시로 안내할 수 있습니다.'],
+        ['자주 묻는 질문은 DB에 저장해야 하나요?', '현재 파이널 프로젝트 단계에서는 변경 빈도가 낮은 안내 문구이므로 프론트 더미데이터로 관리해도 충분합니다. 관리자 페이지에서 FAQ를 직접 관리하려는 요구가 생기면 DB 테이블로 분리하는 것이 좋습니다.'],
         ['회원 탈퇴 시 데이터는 어떻게 되나요?', '탈퇴 시 관심 목록, 플래너, 리뷰 데이터 삭제 정책을 명확히 안내해야 합니다.'],
+        ['회원탈퇴를 누르면 바로 탈퇴되나요?', '회원탈퇴 안내 사항에 동의하지 않으면 진행되지 않으며, 동의 후에도 한 번 더 확인하는 팝업을 띄우는 방식으로 설계했습니다.'],
+        ['소셜 로그인 프로필 이미지와 마이페이지 프로필 이미지는 같은 데이터인가요?', '마이페이지에서는 member.profile을 최종 프로필 이미지로 사용합니다. social_account.profile은 소셜 제공자에서 처음 받아온 원본 이미지 보관용으로만 사용합니다.'],
       ].map(([question, answer]) => (
         <details key={question} className={styles.details}>
           <summary>{question}</summary>

@@ -135,6 +135,7 @@
 }
 
 .avatarImage {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -704,6 +705,12 @@
   color: var(--danger);
 }
 
+.toastinfo {
+  border-color: #d4a84b;
+  background: #fff8d7;
+  color: #5d421c;
+}
+
 .field {
   display: grid;
   gap: 10px;
@@ -770,6 +777,7 @@
 }
 
 .profilePreview img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
