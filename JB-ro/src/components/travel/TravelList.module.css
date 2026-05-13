@@ -377,3 +377,10 @@
 .resetBtn:hover {
   background: #f5f5f5;
 }
+.cardMeta {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #777;
+}
