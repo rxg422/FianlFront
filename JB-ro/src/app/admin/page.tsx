@@ -5,12 +5,6 @@ import React from 'react';
 import styles from './Admin.module.css';
 
 export default function AdminPage() {
-
-  return (
-    <main className={styles.adminPage}>
-      <h1>관리자 페이지</h1>
-    </main>
-  )
   // 나중에 DB에서 데이터를 받아오면 여기에 넣으시면 됩니다.
   const hasData = false; 
 

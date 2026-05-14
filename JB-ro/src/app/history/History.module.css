@@ -1,0 +1,164 @@
+/* history.module.css */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  background-color: #fff;
+}
+
+/* 상단 경로 및 타이틀 */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 1.5rem;
+}
+
+.headerSection {
+  position: relative;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+}
+
+.headerTitle {
+  font-size: 2.25rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.headerDesc {
+  font-size: 1.1rem;
+  color: #4b5563;
+}
+
+/* 배경 일러스트 효과 (이미지 우측 상단 느낌) */
+.headerIllustration {
+  position: absolute;
+  right: 0;
+  top: -20px;
+  width: 300px;
+  opacity: 0.6;
+  z-index: -1;
+}
+
+/* 카드 그리드 */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+}
+
+.card {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: white;
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.imageWrapper {
+  height: 180px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.cardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardContent {
+  padding: 1.5rem;
+}
+
+.courseEmoji {
+  font-size: 1.25rem;
+  margin-right: 0.5rem;
+}
+
+.cardTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.cardSubDesc {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+/* 코스 상세 아이템 (점 형태) */
+.coursePath {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pathItem {
+  font-size: 0.8rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+}
+
+.pathItem::before {
+  content: "•";
+  margin-right: 0.3rem;
+  color: #1a1a1a;
+}
+
+/* 하단 버튼 및 태그 */
+.cardFooter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tagRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tag {
+  font-size: 0.75rem;
+  background-color: #f3f4f6;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.detailBtn {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #fbbf24;
+  background: white;
+  color: #d97706;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.detailBtn:hover {
+  background-color: #fffbeb;
+}

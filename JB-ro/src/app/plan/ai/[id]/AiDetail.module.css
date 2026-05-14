@@ -1,0 +1,46 @@
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 20px; background-color: #f8f9fa; }
+
+.headerCard { background: white; padding: 30px; border-radius: 15px; border: 1px solid #eee; margin-bottom: 30px; position: relative; }
+.badgeAi { display: inline-block; background: #1b5e3a; color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; margin-bottom: 10px; }
+.courseTitle { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+.tagRow { display: flex; gap: 10px; margin-top: 15px; }
+.tag { color: #5c7cfa; font-weight: 600; font-size: 14px; }
+
+.mainContent { display: grid; grid-template-columns: 1fr 350px; gap: 30px; }
+
+/* 일정 영역 */
+.dayGroup { margin-bottom: 40px; }
+.dayHeader { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+.dayLabel { background: #1b5e3a; color: white; padding: 5px 15px; border-radius: 20px; font-weight: 700; }
+.dayTitle { font-size: 18px; font-weight: 700; }
+
+.placeItem { margin-bottom: 20px; }
+.categoryIcon { font-size: 14px; font-weight: 700; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+.placeCard { display: flex; background: white; border-radius: 12px; overflow: hidden; border: 1px solid #eee; transition: 0.2s; cursor: pointer; }
+.placeCard:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+.placeCard img { width: 180px; height: 120px; object-fit: cover; }
+.placeInfo { padding: 15px; flex: 1; position: relative; }
+.placeInfo h4 { font-size: 16px; margin-bottom: 8px; display: flex; justify-content: space-between; }
+.heartIcon { color: #ccc; cursor: pointer; }
+.address { font-size: 12px; color: #999; margin-top: 10px; display: block; }
+
+/* 사이드바 */
+.sideCard { background: white; padding: 20px; border-radius: 12px; border: 1px solid #eee; margin-bottom: 20px; }
+.sideTitle { font-size: 16px; font-weight: 700; margin-bottom: 15px; border-bottom: 2px solid #1b5e3a; padding-bottom: 5px; display: inline-block; }
+.mapPlaceholder { background: #e9ecef; height: 200px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #888; }
+
+.infoList { list-style: none; padding: 0; }
+.infoList li { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; }
+.infoList li span { color: #888; }
+
+.saveBtn { width: 100%; background: #1b5e3a; color: white; border: none; padding: 15px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; margin-bottom: 20px; }
+
+.tipBox { background: #eef7f2; padding: 20px; border-radius: 12px; border: 1px solid #c2e0cf; }
+.tipBox h4 { font-size: 14px; color: #1b5e3a; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+.tipBox ul { padding: 0; list-style: none; font-size: 12px; color: #666; }
+.tipBox li { margin-bottom: 8px; display: flex; gap: 5px; }
+
+@media (max-width: 900px) {
+  .mainContent { grid-template-columns: 1fr; }
+  .sidebar { order: -1; }
+}

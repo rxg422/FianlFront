@@ -10,6 +10,7 @@
 .title { font-size: clamp(1.2rem, 4vw, 1.8rem); font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }
 .subtitle { font-size: 0.9rem; color: #666; line-height: 1.5; }
 
+/* 필터 섹션 */
 .filterSection {
   background: #fff;
   border: 1px solid #eee;
@@ -35,6 +36,7 @@
 .dBtn { flex: 1; min-width: 80px; padding: 10px; border: 1px solid #eee; border-radius: 8px; background: #fff; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }
 .active { background: #1b5e3a; color: #fff; border-color: #1b5e3a; font-weight: 600; }
 
+/* 관심 지역 */
 .regionRow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; min-height: 40px; }
 .selectedRegionBadge {
   padding: 8px 12px;
@@ -64,7 +66,7 @@
   cursor: pointer;
 }
 
-/* 지역 선택 팝업 */
+/* 지역 선택 모달 */
 .regionPickerContainer {
   position: absolute;
   top: 100%;
@@ -84,7 +86,7 @@
 .regionItem { padding: 8px; font-size: 0.8rem; text-align: center; border-radius: 6px; background: #f9f9f9; cursor: pointer; border: 1px solid transparent; }
 .regionItemSelected { background: #1b5e3a; color: white; font-weight: 600; }
 
-/* 여행 스타일 그리드 */
+/* 스타일 그리드 */
 .styleGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 15px; }
 .styleCard { border: 1px solid #eee; border-radius: 12px; padding: 20px 10px; text-align: center; cursor: pointer; position: relative; transition: 0.2s; }
 .activeStyle { border: 2px solid #1b5e3a; background: #f7fbf8; }
@@ -95,9 +97,11 @@
 
 .aiBtn { width: 100%; margin-top: 30px; padding: 16px; background: #1b5e3a; color: #fff; border: none; border-radius: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
 
-/* 결과 코스 그리드 */
+/* 결과 리스트 */
 .courseGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.card { background: #fff; border: 1px solid #eee; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+.card { background: #fff; border: 1px solid #eee; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: 0.2s; }
+.card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+
 .imgWrap { position: relative; height: 160px; }
 .imgWrap img { width: 100%; height: 100%; object-fit: cover; }
 .bAi, .bDay { position: absolute; top: 10px; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; color: #fff; }
@@ -120,7 +124,7 @@
 
 .footer { margin-top: 40px; background: #f8f9fa; padding: 15px; border-radius: 8px; display: flex; gap: 10px; align-items: center; font-size: 0.8rem; color: #888; }
 
-/* 반응형 */
+/* 반응형 모바일 */
 @media (max-width: 1024px) {
   .styleGrid { grid-template-columns: repeat(3, 1fr); }
   .courseGrid { grid-template-columns: repeat(2, 1fr); }
