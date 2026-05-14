@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from './HistoryAI.module.css';
 import { Send, Bot } from 'lucide-react';
-import api, { getGeminiResponse } from '@/utils/api'; 
+import api from '@/utils/api'; // getGeminiResponse는 삭제합니다.
 
 interface Message {
   id: number;
@@ -33,70 +33,60 @@ const History = () => {
     scrollToBottom();
   }, [messages]);
 
-  /**
-   * [중요] 이전 대화 내역 불러오기 로직
-   */
+  // [이전 내역 불러오기] - 기존 백엔드 API 유지
   useEffect(() => {
     const loadHistory = async () => {
       try {
         const response = await api.get('/api/chat/history');
-        
-        // ★ 오타 수정: response.data.lengeth -> response.data.length
         if (response.data && response.data.length > 0) {
           const historyMsgs: Message[] = [];
-          
           response.data.forEach((item: any) => {
-            // 사용자의 질문 추가
-            historyMsgs.push({ 
-              id: Date.now() + Math.random(), 
-              sender: 'user', 
-              text: item.question 
-            });
-            // AI의 답변 추가
-            historyMsgs.push({ 
-              id: Date.now() + Math.random(), 
-              sender: 'bot', 
-              text: item.answer 
-            });
+            historyMsgs.push({ id: Math.random(), sender: 'user', text: item.question });
+            historyMsgs.push({ id: Math.random(), sender: 'bot', text: item.answer });
           });
-          
-          // 기존 인사말 뒤에 내역 붙이기
           setMessages(prev => [...prev, ...historyMsgs]);
         }
       } catch (error) {
-        console.error("이전 내역 로드 실패:", error);
+        console.error("내역 로드 실패:", error);
       }
     };
     loadHistory();
   }, []);
 
   /**
-   * 메시지 전송 핸들러
+   * 메시지 전송 핸들러 (백엔드 에이전트 호출로 수정)
    */
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
 
-    // 1. 사용자 메시지 화면에 추가
-    setMessages(prev => [...prev, { id: Date.now(), sender: 'user', text }]);
+    // 1. 화면에 사용자 메시지 즉시 추가
+    const userMsgId = Date.now();
+    setMessages(prev => [...prev, { id: userMsgId, sender: 'user', text }]);
     setInputText('');
     setIsLoading(true);
 
     try {
-      // 2. 실제 AI 호출 (내부적으로 백엔드 저장까지 수행함)
-      const aiReply = await getGeminiResponse(text);
+      // 2. [수정 포인트] 프론트 직접 호출 대신 백엔드 Grok 에이전트 호출
+      // 백엔드 컨트롤러에 새로 만들 'chat/ask' 엔드포인트를 호출합니다.
+      const response = await api.post('/api/chat/ask', { 
+        question: text 
+      });
 
-      // 3. AI 답변을 화면에 추가
+      // 3. 백엔드에서 받은 Grok의 답변을 화면에 추가
+      const aiReply = response.data.answer; 
+
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         sender: 'bot',
         text: aiReply,
       }]);
+
     } catch (error) {
-      console.error("챗봇 응답 에러:", error);
+      console.error("에이전트 응답 에러:", error);
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         sender: 'bot',
-        text: "죄송합니다. 역사를 조회하는 도중 에러가 발생했습니다. 잠시 후 다시 시도해주세요.",
+        text: "죄송합니다. 서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.",
       }]);
     } finally {
       setIsLoading(false);
