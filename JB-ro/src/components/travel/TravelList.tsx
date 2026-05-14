@@ -13,81 +13,42 @@ import {
   Building2,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import LoginModal from "@/components/LoginModal/LoginModal";
 
 type TravelCategory = "관광지" | "숙소" | "음식점" | "축제";
 type SortType = "popular" | "latest";
 
 interface TravelItem {
-  id: number;
+  contentId: number;
+  contentTypeId: number;
+  categoryId: number;
+  categoryName: TravelCategory;
   title: string;
-  address: string;
-  imageUrl: string;
-  category: TravelCategory;
-  region: string;
-  views: number;
-  createdAt: string;
+  firstImage: string;
+  firstImage2?: string;
+  addr1: string;
+  addr2?: string;
+  mapX?: number;
+  mapY?: number;
+  favoriteCount: number;
+  likedYn: "Y" | "N";
+  reviewCount: number;
 }
 
-const items: TravelItem[] = [
-  {
-    id: 1,
-    title: "전주 한옥마을",
-    address: "전주시 완산구 기린대로 99",
-    imageUrl: "/images/travel/sample1.jpg",
-    category: "관광지",
-    region: "전주",
-    views: 120,
-    createdAt: "2026-05-01",
-  },
-  {
-    id: 2,
-    title: "내장산 국립공원",
-    address: "정읍시 내장산로 1207",
-    imageUrl: "/images/travel/sample2.jpg",
-    category: "관광지",
-    region: "정읍",
-    views: 98,
-    createdAt: "2026-04-28",
-  },
-  {
-    id: 3,
-    title: "신라스테이 전주",
-    address: "전주시 완산구 전주객사4길",
-    imageUrl: "/images/travel/sample3.jpg",
-    category: "숙소",
-    region: "전주",
-    views: 76,
-    createdAt: "2026-05-03",
-  },
-  {
-    id: 4,
-    title: "가맥집 전일슈퍼",
-    address: "전주시 완산구 현무1길",
-    imageUrl: "/images/travel/sample4.jpg",
-    category: "음식점",
-    region: "전주",
-    views: 210,
-    createdAt: "2026-04-20",
-  },
-  {
-    id: 5,
-    title: "전주 세계소리축제",
-    address: "전주시 덕진구 소리로 31",
-    imageUrl: "/images/travel/sample5.jpg",
-    category: "축제",
-    region: "전주",
-    views: 155,
-    createdAt: "2026-05-05",
-  },
-];
+interface TravelListResponse {
+  list: TravelItem[];
+  totalCount: number;
+  currentPage: number;
+  limit: number;
+}
 
 const categories = [
-  { label: "전체", icon: Grid2X2 },
-  { label: "관광지", icon: Landmark },
-  { label: "숙소", icon: Bed },
-  { label: "음식점", icon: Utensils },
-  { label: "축제", icon: PartyPopper },
+  { label: "전체", categoryId: null, icon: Grid2X2 },
+  { label: "관광지", categoryId: 1, icon: Landmark },
+  { label: "음식점", categoryId: 2, icon: Utensils },
+  { label: "축제", categoryId: 3, icon: PartyPopper },
+  { label: "숙소", categoryId: 4, icon: Bed },
 ];
 
 const regions = [
@@ -107,32 +68,53 @@ const regions = [
 
 const ITEMS_PER_PAGE = 6;
 
+const API_BASE_URL = "http://localhost:8082";
+
 export default function TravelList() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const selectedCategory = searchParams.get("category") || "전체";
+  const selectedCategoryId = searchParams.get("categoryId");
   const selectedRegion = searchParams.get("region") || "전체 지역";
   const selectedSort = (searchParams.get("sort") as SortType) || "popular";
   const currentPage = Number(searchParams.get("page") || "1");
 
   const [keyword, setKeyword] = useState("");
-  const [likedItems, setLikedItems] = useState<number[]>([]);
+  const [items, setItems] = useState<TravelItem[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  /*
+    로그인 완성 전 테스트용
+
+    null이면 로그인 안 한 상태 → 하트 누르면 로그인 모달 뜸
+    1로 바꾸면 테스트 유저 1번으로 찜 API 요청 감
+  */
+  const userId: number | null = 1;
+  // const userId: number | null = 1;
+
+  const selectedCategoryLabel = useMemo(() => {
+    const found = categories.find(
+      (item) => String(item.categoryId) === selectedCategoryId
+    );
+
+    return found ? found.label : "전체";
+  }, [selectedCategoryId]);
 
   const movePage = ({
-    category = selectedCategory,
+    categoryId = selectedCategoryId,
     region = selectedRegion,
     sort = selectedSort,
     page = 1,
   }: {
-    category?: string;
+    categoryId?: string | null;
     region?: string;
     sort?: SortType;
     page?: number;
   }) => {
     const params = new URLSearchParams();
 
-    if (category !== "전체") params.set("category", category);
+    if (categoryId) params.set("categoryId", categoryId);
     if (region !== "전체 지역") params.set("region", region);
     if (sort !== "popular") params.set("sort", sort);
     if (page !== 1) params.set("page", String(page));
@@ -141,53 +123,99 @@ export default function TravelList() {
     router.push(query ? `/travel?${query}` : "/travel");
   };
 
-  const toggleLike = (id: number) => {
-    setLikedItems((prev) =>
-      prev.includes(id)
-        ? prev.filter((itemId) => itemId !== id)
-        : [...prev, id]
-    );
-  };
+  const fetchTravelList = async () => {
+    const params = new URLSearchParams();
 
-  const filteredItems = useMemo(() => {
-    let result = [...items];
-
-    if (selectedCategory !== "전체") {
-      result = result.filter((item) => item.category === selectedCategory);
-    }
-
-    if (selectedRegion !== "전체 지역") {
-      result = result.filter((item) => item.region === selectedRegion);
+    if (selectedCategoryId) {
+      params.set("categoryId", selectedCategoryId);
     }
 
     if (keyword.trim()) {
-      result = result.filter((item) => item.title.includes(keyword.trim()));
+      params.set("keyword", keyword.trim());
     }
 
-    if (selectedSort === "popular") {
-      result.sort((a, b) => b.views - a.views);
+    if (selectedSort) {
+      params.set("sort", selectedSort);
     }
 
-    if (selectedSort === "latest") {
-      result.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() -
-          new Date(a.createdAt).getTime()
+    params.set("page", String(currentPage));
+    params.set("limit", String(ITEMS_PER_PAGE));
+
+    if (userId !== null) {
+      params.set("userId", String(userId));
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/tourList?${params}`);
+
+      if (!response.ok) {
+        throw new Error("여행지 목록 조회 실패");
+      }
+
+      const data: TravelListResponse = await response.json();
+
+      setItems(data.list);
+      setTotalCount(data.totalCount);
+    } catch (error) {
+      console.error(error);
+      setItems([]);
+      setTotalCount(0);
+    }
+  };
+
+  useEffect(() => {
+    fetchTravelList();
+  }, [selectedCategoryId, selectedSort, currentPage]);
+
+  const handleSearch = () => {
+    fetchTravelList();
+  };
+
+  const toggleLike = async (contentId: number) => {
+    if (userId === null) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/tourList/favorite/${contentId}?userId=${userId}`,
+        {
+          method: "POST",
+        }
       );
+
+      if (response.status === 401) {
+        setIsLoginModalOpen(true);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error("찜 처리 실패");
+      }
+
+      const result = await response.text();
+
+      setItems((prev) =>
+        prev.map((item) => {
+          if (item.contentId !== contentId) return item;
+
+          const isInsert = result === "INSERT";
+
+          return {
+            ...item,
+            likedYn: isInsert ? "Y" : "N",
+            favoriteCount: isInsert
+              ? item.favoriteCount + 1
+              : Math.max(item.favoriteCount - 1, 0),
+          };
+        })
+      );
+    } catch (error) {
+      console.error(error);
+      alert("찜 처리 중 오류가 발생했습니다.");
     }
-
-    return result;
-  }, [selectedCategory, selectedRegion, selectedSort, keyword]);
-
-  const totalPage = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-
-  const safeCurrentPage =
-    totalPage === 0 ? 1 : Math.min(currentPage, totalPage);
-
-  const pagedItems = filteredItems.slice(
-    (safeCurrentPage - 1) * ITEMS_PER_PAGE,
-    safeCurrentPage * ITEMS_PER_PAGE
-  );
+  };
 
   const getBadgeClass = (category: TravelCategory) => {
     if (category === "관광지") return styles.attraction;
@@ -196,210 +224,251 @@ export default function TravelList() {
     return styles.festival;
   };
 
+  const totalPage = Math.ceil(totalCount / ITEMS_PER_PAGE);
+  const safeCurrentPage = totalPage === 0 ? 1 : Math.min(currentPage, totalPage);
+
   return (
-    <main className={styles.page}>
-      <aside className={styles.sidebar}>
-        <section>
-          <h3>카테고리</h3>
+    <>
+      <main className={styles.page}>
+        <aside className={styles.sidebar}>
+          <section>
+            <h3>카테고리</h3>
 
-          {categories.map(({ label, icon: Icon }) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => movePage({ category: label })}
-              className={`${styles.sideBtn} ${
-                selectedCategory === label
-                  ? label === "전체"
-                    ? styles.active
-                    : label === "관광지"
-                    ? styles.attractionBtn
-                    : label === "숙소"
-                    ? styles.hotelBtn
-                    : label === "음식점"
-                    ? styles.foodBtn
-                    : styles.festivalBtn
-                  : ""
-              }`}
+            {categories.map(({ label, categoryId, icon: Icon }) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() =>
+                  movePage({
+                    categoryId: categoryId === null ? null : String(categoryId),
+                    page: 1,
+                  })
+                }
+                className={`${styles.sideBtn} ${
+                  selectedCategoryLabel === label
+                    ? label === "전체"
+                      ? styles.active
+                      : label === "관광지"
+                      ? styles.attractionBtn
+                      : label === "숙소"
+                      ? styles.hotelBtn
+                      : label === "음식점"
+                      ? styles.foodBtn
+                      : styles.festivalBtn
+                    : ""
+                }`}
+              >
+                <Icon size={18} />
+                {label}
+              </button>
+            ))}
+          </section>
+
+          <section>
+            <h3>지역 선택</h3>
+
+            {regions.map((region, index) => (
+              <button
+                key={region}
+                type="button"
+                onClick={() => movePage({ region, page: 1 })}
+                className={`${styles.regionBtn} ${
+                  selectedRegion === region ? styles.activeRegion : ""
+                }`}
+              >
+                {index === 0 ? <MapPin size={15} /> : <Building2 size={14} />}
+                {region}
+              </button>
+            ))}
+          </section>
+
+          <section>
+            <h3>정렬</h3>
+
+            <select
+              className={styles.sortBox}
+              value={selectedSort}
+              onChange={(e) =>
+                movePage({
+                  sort: e.target.value as SortType,
+                  page: 1,
+                })
+              }
             >
-              <Icon size={18} />
-              {label}
+              <option value="popular">인기순</option>
+              <option value="latest">최신순</option>
+            </select>
+          </section>
+        </aside>
+
+        <section className={styles.content}>
+          <div className={styles.searchBox}>
+            <input
+              type="text"
+              placeholder="어디로 떠나고 싶으세요?"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSearch();
+                }
+              }}
+            />
+
+            <button type="button" onClick={handleSearch}>
+              <Search size={22} />
             </button>
-          ))}
-        </section>
+          </div>
 
-        <section>
-          <h3>지역 선택</h3>
+          <div className={styles.topBar}>
+            <h2>
+              {selectedCategoryLabel} 목록
+              <span>총 {totalCount}건</span>
+            </h2>
 
-          {regions.map((region, index) => (
+            <div className={styles.sortArea}>
+              <span>정렬</span>
+
+              <select
+                value={selectedSort}
+                onChange={(e) =>
+                  movePage({
+                    sort: e.target.value as SortType,
+                    page: 1,
+                  })
+                }
+              >
+                <option value="popular">인기순</option>
+                <option value="latest">최신순</option>
+              </select>
+
+              <button
+                type="button"
+                className={styles.resetBtn}
+                onClick={() => {
+                  setKeyword("");
+                  router.push("/travel");
+                }}
+              >
+                초기화
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.grid}>
+            {items.map((item) => {
+              const isLiked = item.likedYn === "Y";
+
+              return (
+                <article
+                  key={item.contentId}
+                  className={styles.card}
+                  onClick={() => router.push(`/travel/${item.contentId}`)}
+                >
+                  <div className={styles.imageWrap}>
+                    <img
+                      src={
+                        item.firstImage && item.firstImage.trim() !== ""
+                          ? item.firstImage
+                          : "/images/travel/no-image.jpg"
+                      }
+                      alt={item.title}
+                    />
+
+                    <button
+                      type="button"
+                      className={styles.heartBtn}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleLike(item.contentId);
+                      }}
+                    >
+                      <Heart
+                        size={25}
+                        strokeWidth={2.4}
+                        fill={isLiked ? "#ff4d6d" : "transparent"}
+                        color="#ff4d6d"
+                      />
+                    </button>
+                  </div>
+
+                  <div className={styles.cardBody}>
+                    <h3>{item.title}</h3>
+                    <p>{item.addr1}</p>
+
+                    <span
+                      className={`${styles.badge} ${getBadgeClass(
+                        item.categoryName
+                      )}`}
+                    >
+                      {item.categoryName}
+                    </span>
+
+                    <div className={styles.cardMeta}>
+                      <span>♡ {item.favoriteCount}</span>
+                      <span>리뷰 {item.reviewCount}</span>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          {items.length === 0 && (
+            <p className={styles.emptyText}>조회된 여행지가 없습니다.</p>
+          )}
+
+          <div className={styles.pagination}>
             <button
-              key={region}
               type="button"
-              onClick={() => movePage({ region })}
-              className={`${styles.regionBtn} ${
-                selectedRegion === region ? styles.activeRegion : ""
-              }`}
+              disabled={safeCurrentPage === 1}
+              onClick={() => movePage({ page: 1 })}
             >
-              {index === 0 ? <MapPin size={15} /> : <Building2 size={14} />}
-              {region}
+              ≪
             </button>
-          ))}
-        </section>
 
-        <section>
-          <h3>정렬</h3>
-
-          <select
-            className={styles.sortBox}
-            value={selectedSort}
-            onChange={(e) =>
-              movePage({
-                sort: e.target.value as SortType,
-              })
-            }
-          >
-            <option value="popular">인기순</option>
-            <option value="latest">최신순</option>
-          </select>
-        </section>
-      </aside>
-
-      <section className={styles.content}>
-        <div className={styles.searchBox}>
-          <input
-            type="text"
-            placeholder="어디로 떠나고 싶으세요?"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-          />
-          <Search size={22} />
-        </div>
-
-        <div className={styles.topBar}>
-          <h2>
-            {selectedCategory} 목록
-            <span>총 {filteredItems.length}건</span>
-          </h2>
-
-          <div className={styles.sortArea}>
-  <span>정렬</span>
-
-  <select
-    value={selectedSort}
-    onChange={(e) =>
-      movePage({
-        sort: e.target.value as SortType,
-      })
-    }
-  >
-    <option value="popular">인기순</option>
-    <option value="latest">최신순</option>
-  </select>
-
-  <button
-    type="button"
-    className={styles.resetBtn}
-    onClick={() => {
-      setKeyword("");
-      router.push("/travel");
-    }}
-  >
-    초기화
-  </button>
-</div>
-        </div>
-
-        <div className={styles.grid}>
-          {pagedItems.map((item) => {
-            const isLiked = likedItems.includes(item.id);
-
-            return (
-              <article key={item.id} className={styles.card} onClick={() => { console.log('클릭됨!'); router.push(`/travel/${item.id}`); }}>
-                <div className={styles.imageWrap}>
-                  <img src={item.imageUrl} alt={item.title} />
-
-                  <button
-                    type="button"
-                    className={styles.heartBtn}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleLike(item.id);
-                    }}
-                  >
-                   <Heart
-                    size={25}
-                    strokeWidth={2.4}
-                    fill={isLiked ? "#ff4d6d" : "transparent"}
-                    color="#ff4d6d"
-                  />
-                  </button>
-                </div>
-
-                <div className={styles.cardBody}>
-                  <h3>{item.title}</h3>
-                  <p>{item.address}</p>
-
-                  <span
-                    className={`${styles.badge} ${getBadgeClass(
-                      item.category
-                    )}`}
-                  >
-                    {item.category}
-                  </span>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-
-        {filteredItems.length === 0 && (
-          <p className={styles.emptyText}>조회된 여행지가 없습니다.</p>
-        )}
-
-        <div className={styles.pagination}>
-          <button
-            type="button"
-            disabled={safeCurrentPage === 1}
-            onClick={() => movePage({ page: 1 })}
-          >
-            ≪
-          </button>
-
-          <button
-            type="button"
-            disabled={safeCurrentPage === 1}
-            onClick={() => movePage({ page: safeCurrentPage - 1 })}
-          >
-            ‹
-          </button>
-
-          {Array.from({ length: totalPage }, (_, i) => i + 1).map((page) => (
             <button
-              key={page}
               type="button"
-              onClick={() => movePage({ page })}
-              className={safeCurrentPage === page ? styles.current : ""}
+              disabled={safeCurrentPage === 1}
+              onClick={() => movePage({ page: safeCurrentPage - 1 })}
             >
-              {page}
+              ‹
             </button>
-          ))}
 
-          <button
-            type="button"
-            disabled={safeCurrentPage === totalPage || totalPage === 0}
-            onClick={() => movePage({ page: safeCurrentPage + 1 })}
-          >
-            ›
-          </button>
+            {Array.from({ length: totalPage }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                type="button"
+                onClick={() => movePage({ page })}
+                className={safeCurrentPage === page ? styles.current : ""}
+              >
+                {page}
+              </button>
+            ))}
 
-          <button
-            type="button"
-            disabled={safeCurrentPage === totalPage || totalPage === 0}
-            onClick={() => movePage({ page: totalPage })}
-          >
-            ≫
-          </button>
-        </div>
-      </section>
-    </main>
+            <button
+              type="button"
+              disabled={safeCurrentPage === totalPage || totalPage === 0}
+              onClick={() => movePage({ page: safeCurrentPage + 1 })}
+            >
+              ›
+            </button>
+
+            <button
+              type="button"
+              disabled={safeCurrentPage === totalPage || totalPage === 0}
+              onClick={() => movePage({ page: totalPage })}
+            >
+              ≫
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      />
+    </>
   );
 }
