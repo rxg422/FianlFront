@@ -7,8 +7,9 @@
 /* 사이드바 */
 
 .sidebar {
-  width: 270px;
-  padding: 30px 24px;
+  width: 200px;
+  min-width: 200px;
+  padding: 30px 16px;
   border-right: 1px solid #e5e7eb;
   background: #fafafa;
 }
@@ -18,7 +19,7 @@
 }
 
 .sidebar h3 {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 800;
   margin-bottom: 14px;
 }
@@ -34,57 +35,42 @@
   border-radius: 8px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .sideBtn {
-  height: 44px;
-  padding: 0 16px;
+  height: 40px;
+  padding: 0 12px;
   margin-bottom: 8px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
 }
 
 .regionBtn {
-  height: 36px;
-  padding: 0 14px;
+  height: 34px;
+  padding: 0 10px;
   margin-bottom: 6px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
 .sortBox {
-  height: 44px;
-  padding: 0 16px;
+  height: 40px;
+  padding: 0 12px;
   justify-content: space-between;
   font-weight: 700;
+  font-size: 13px;
 }
 
 /* 카테고리 컬러 */
 
 .active {
-  background: #e8f7ef;
-  border-color: #83c5a3;
-  color: #107a45;
-}
-
-.blue {
-  background: #eef5ff;
-  border-color: #bfd7ff;
-  color: #2563eb;
-}
-
-.orange {
-  background: #fff4eb;
-  border-color: #ffd4b0;
-  color: #ea580c;
-}
-
-.purple {
-  background: #f3edff;
-  border-color: #d7c7ff;
-  color: #7c3aed;
+  background: #fff4cc;
+  border-color: #f4d24f;
+  color: #9a6b00;
 }
 
 .activeRegion {
@@ -93,11 +79,36 @@
   color: #107a45;
 }
 
+.attractionBtn {
+  background: #e8f7ef;
+  border-color: #83c5a3;
+  color: #107a45;
+}
+
+.hotelBtn {
+  background: #eef5ff;
+  border-color: #bfd7ff;
+  color: #2563eb;
+}
+
+.foodBtn {
+  background: #fff4eb;
+  border-color: #ffd4b0;
+  color: #ea580c;
+}
+
+.festivalBtn {
+  background: #f3edff;
+  border-color: #d7c7ff;
+  color: #7c3aed;
+}
+
 /* 콘텐츠 */
 
 .content {
   flex: 1;
   padding: 28px 34px;
+  min-width: 0;
 }
 
 /* 검색창 */
@@ -129,7 +140,7 @@
 }
 
 .topBar h2 {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 900;
 }
 
@@ -156,6 +167,7 @@
   font-weight: 700;
   cursor: pointer;
 }
+
 .emptyText {
   margin-top: 40px;
   text-align: center;
@@ -163,22 +175,23 @@
   font-size: 15px;
 }
 
-/* 카드 그리드 */
+/* 카드 그리드 - 5열 */
 
 .grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 18px;
+  gap: 14px;
 }
 
 /* 카드 */
 
 .card {
   border: 1px solid #e5e7eb;
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
   background: white;
   transition: 0.2s;
+  cursor: pointer;
 }
 
 .card:hover {
@@ -190,53 +203,63 @@
 
 .imageWrap {
   position: relative;
-  height: 180px;
+  width: 100%;
+  height: 150px;
+  overflow: hidden;
+  background: #f0f0f0;
 }
 
 .imageWrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 /* 찜 버튼 */
 
 .heartBtn {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 8px;
+  right: 8px;
   border: none;
   background: transparent;
-  color: rgb(204, 27, 27);
   cursor: pointer;
   padding: 0;
+  z-index: 1;
 }
 
 /* 카드 내용 */
 
 .cardBody {
-  padding: 14px;
+  padding: 10px 12px;
 }
 
 .cardBody h3 {
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 800;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cardBody p {
-  font-size: 14px;
+  font-size: 12px;
   color: #666;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* 뱃지 */
 
 .badge {
   display: inline-block;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -267,7 +290,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 8px;
 }
 
 .pagination button {
@@ -275,6 +298,7 @@
   background: transparent;
   cursor: pointer;
   font-size: 16px;
+  padding: 4px 8px;
 }
 
 .current {
@@ -282,38 +306,34 @@
   height: 36px;
   border-radius: 50%;
   background: #173c35 !important;
-  color: white;
+  color: white !important;
   font-weight: 800;
 }
-.active {
-  background: #fff4cc;
-  border-color: #f4d24f;
-  color: #9a6b00;
+
+.resetBtn {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid #e4e4e4;
+  background: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
 }
 
-.attractionBtn {
-  background: #e8f7ef;
-  border-color: #83c5a3;
-  color: #107a45;
+.resetBtn:hover {
+  background: #f5f5f5;
 }
 
-.hotelBtn {
-  background: #eef5ff;
-  border-color: #bfd7ff;
-  color: #2563eb;
+.cardMeta {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #777;
 }
 
-.foodBtn {
-  background: #fff4eb;
-  border-color: #ffd4b0;
-  color: #ea580c;
-}
-
-.festivalBtn {
-  background: #f3edff;
-  border-color: #d7c7ff;
-  color: #7c3aed;
-}
 .wishActive {
   background: #e9435a;
   border-color: #e9435a;
@@ -361,26 +381,4 @@
   font-weight: 700;
   text-decoration: none;
   box-shadow: 0 2px 9px rgba(0, 0, 0, 0.08);
-}
-.resetBtn {
-  height: 42px;
-  padding: 0 16px;
-  border-radius: 12px;
-  border: 1px solid #e4e4e4;
-  background: white;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.resetBtn:hover {
-  background: #f5f5f5;
-}
-.cardMeta {
-  display: flex;
-  gap: 12px;
-  margin-top: 10px;
-  font-size: 13px;
-  color: #777;
 }

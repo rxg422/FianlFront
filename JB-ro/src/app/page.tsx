@@ -180,7 +180,7 @@ const Home = () => {
 
   // 인기 여행지 API fetch — 실제 엔드포인트로 교체
   useEffect(()=>{
-    fetch('/api/travel?sort=popular&limit=3')
+    fetch('/api/tourList?sort=popular&limit=3')
       .then(r=>r.json())
       .then((data: { list: TravelItem[] })=>setPopularSites(data.list?.slice(0,3) || []))
       .catch(()=>{});
