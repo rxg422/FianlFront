@@ -67,8 +67,8 @@ const History = () => {
 
     try {
       // 2. [수정 포인트] 프론트 직접 호출 대신 백엔드 Grok 에이전트 호출
-      // 백엔드 컨트롤러에 새로 만들 'chat/ask' 엔드포인트를 호출합니다.
-      const response = await api.post('/api/chat/ask', { 
+      // 백엔드 컨트롤러에 새로 만들 'chat/save' 엔드포인트를 호출합니다.
+      const response = await api.post('/api/chat/save', { 
         question: text 
       });
 
