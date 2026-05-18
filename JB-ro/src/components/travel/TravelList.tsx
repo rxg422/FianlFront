@@ -52,30 +52,29 @@ const categories = [
 ];
 
 const regions = [
-  "전체 지역",
-  "전주",
-  "군산",
-  "익산",
-  "정읍",
-  "남원",
-  "김제",
-  "고창",
-  "부안",
-  "완주",
-  "무주",
-  "임실",
+  { label: "전체 지역", regionCd: null },
+  { label: "전주", regionCd: 110 },
+  { label: "군산", regionCd: 130 },
+  { label: "익산", regionCd: 140 },
+  { label: "정읍", regionCd: 180 },
+  { label: "남원", regionCd: 190 },
+  { label: "김제", regionCd: 210 },
+  { label: "고창", regionCd: 790 },
+  { label: "부안", regionCd: 800 },
+  { label: "완주", regionCd: 710 },
+  { label: "무주", regionCd: 730 },
+  { label: "임실", regionCd: 750 },
 ];
 
-const ITEMS_PER_PAGE = 6;
-
-const API_BASE_URL = "http://localhost:8082";
+const ITEMS_PER_PAGE = 25;
+const API_BASE_URL = "http://localhost:8081";
 
 export default function TravelList() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const selectedCategoryId = searchParams.get("categoryId");
-  const selectedRegion = searchParams.get("region") || "전체 지역";
+  const selectedRegion = searchParams.get("region") || "";
   const selectedSort = (searchParams.get("sort") as SortType) || "popular";
   const currentPage = Number(searchParams.get("page") || "1");
 
@@ -84,20 +83,12 @@ export default function TravelList() {
   const [totalCount, setTotalCount] = useState(0);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  /*
-    로그인 완성 전 테스트용
-
-    null이면 로그인 안 한 상태 → 하트 누르면 로그인 모달 뜸
-    1로 바꾸면 테스트 유저 1번으로 찜 API 요청 감
-  */
   const userId: number | null = 1;
-  // const userId: number | null = 1;
 
   const selectedCategoryLabel = useMemo(() => {
     const found = categories.find(
       (item) => String(item.categoryId) === selectedCategoryId
     );
-
     return found ? found.label : "전체";
   }, [selectedCategoryId]);
 
@@ -113,9 +104,8 @@ export default function TravelList() {
     page?: number;
   }) => {
     const params = new URLSearchParams();
-
     if (categoryId) params.set("categoryId", categoryId);
-    if (region !== "전체 지역") params.set("region", region);
+    if (region) params.set("region", region);
     if (sort !== "popular") params.set("sort", sort);
     if (page !== 1) params.set("page", String(page));
 
@@ -126,34 +116,18 @@ export default function TravelList() {
   const fetchTravelList = async () => {
     const params = new URLSearchParams();
 
-    if (selectedCategoryId) {
-      params.set("categoryId", selectedCategoryId);
-    }
-
-    if (keyword.trim()) {
-      params.set("keyword", keyword.trim());
-    }
-
-    if (selectedSort) {
-      params.set("sort", selectedSort);
-    }
-
+    if (selectedCategoryId) params.set("categoryId", selectedCategoryId);
+    if (keyword.trim()) params.set("keyword", keyword.trim());
+    if (selectedSort) params.set("sort", selectedSort);
+    if (selectedRegion) params.set("regionCd", selectedRegion);
     params.set("page", String(currentPage));
     params.set("limit", String(ITEMS_PER_PAGE));
-
-    if (userId !== null) {
-      params.set("userId", String(userId));
-    }
+    if (userId !== null) params.set("userId", String(userId));
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/tourList?${params}`);
-
-      if (!response.ok) {
-        throw new Error("여행지 목록 조회 실패");
-      }
-
+      if (!response.ok) throw new Error("여행지 목록 조회 실패");
       const data: TravelListResponse = await response.json();
-
       setItems(data.list);
       setTotalCount(data.totalCount);
     } catch (error) {
@@ -165,7 +139,7 @@ export default function TravelList() {
 
   useEffect(() => {
     fetchTravelList();
-  }, [selectedCategoryId, selectedSort, currentPage]);
+  }, [selectedCategoryId, selectedSort, selectedRegion, currentPage]);
 
   const handleSearch = () => {
     fetchTravelList();
@@ -180,9 +154,7 @@ export default function TravelList() {
     try {
       const response = await fetch(
         `${API_BASE_URL}/api/tourList/favorite/${contentId}?userId=${userId}`,
-        {
-          method: "POST",
-        }
+        { method: "POST" }
       );
 
       if (response.status === 401) {
@@ -190,18 +162,14 @@ export default function TravelList() {
         return;
       }
 
-      if (!response.ok) {
-        throw new Error("찜 처리 실패");
-      }
+      if (!response.ok) throw new Error("찜 처리 실패");
 
       const result = await response.text();
 
       setItems((prev) =>
         prev.map((item) => {
           if (item.contentId !== contentId) return item;
-
           const isInsert = result === "INSERT";
-
           return {
             ...item,
             likedYn: isInsert ? "Y" : "N",
@@ -233,7 +201,6 @@ export default function TravelList() {
         <aside className={styles.sidebar}>
           <section>
             <h3>카테고리</h3>
-
             {categories.map(({ label, categoryId, icon: Icon }) => (
               <button
                 key={label}
@@ -266,33 +233,35 @@ export default function TravelList() {
 
           <section>
             <h3>지역 선택</h3>
-
-            {regions.map((region, index) => (
+            {regions.map(({ label, regionCd }) => (
               <button
-                key={region}
+                key={label}
                 type="button"
-                onClick={() => movePage({ region, page: 1 })}
+                onClick={() =>
+                  movePage({
+                    region: regionCd !== null ? String(regionCd) : "",
+                    page: 1,
+                  })
+                }
                 className={`${styles.regionBtn} ${
-                  selectedRegion === region ? styles.activeRegion : ""
+                  selectedRegion === (regionCd !== null ? String(regionCd) : "")
+                    ? styles.activeRegion
+                    : ""
                 }`}
               >
-                {index === 0 ? <MapPin size={15} /> : <Building2 size={14} />}
-                {region}
+                {regionCd === null ? <MapPin size={15} /> : <Building2 size={14} />}
+                {label}
               </button>
             ))}
           </section>
 
           <section>
             <h3>정렬</h3>
-
             <select
               className={styles.sortBox}
               value={selectedSort}
               onChange={(e) =>
-                movePage({
-                  sort: e.target.value as SortType,
-                  page: 1,
-                })
+                movePage({ sort: e.target.value as SortType, page: 1 })
               }
             >
               <option value="popular">인기순</option>
@@ -309,12 +278,9 @@ export default function TravelList() {
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleSearch();
-                }
+                if (e.key === "Enter") handleSearch();
               }}
             />
-
             <button type="button" onClick={handleSearch}>
               <Search size={22} />
             </button>
@@ -325,23 +291,17 @@ export default function TravelList() {
               {selectedCategoryLabel} 목록
               <span>총 {totalCount}건</span>
             </h2>
-
             <div className={styles.sortArea}>
               <span>정렬</span>
-
               <select
                 value={selectedSort}
                 onChange={(e) =>
-                  movePage({
-                    sort: e.target.value as SortType,
-                    page: 1,
-                  })
+                  movePage({ sort: e.target.value as SortType, page: 1 })
                 }
               >
                 <option value="popular">인기순</option>
                 <option value="latest">최신순</option>
               </select>
-
               <button
                 type="button"
                 className={styles.resetBtn}
@@ -358,7 +318,6 @@ export default function TravelList() {
           <div className={styles.grid}>
             {items.map((item) => {
               const isLiked = item.likedYn === "Y";
-
               return (
                 <article
                   key={item.contentId}
@@ -370,11 +329,16 @@ export default function TravelList() {
                       src={
                         item.firstImage && item.firstImage.trim() !== ""
                           ? item.firstImage
-                          : "/images/travel/no-image.jpg"
+                          : item.categoryName === "관광지"
+                          ? "/travel/no-image-attraction.png"
+                          : item.categoryName === "음식점"
+                          ? "/travel/no-image-food.png"
+                          : item.categoryName === "축제"
+                          ? "/travel/no-image-festival.png"
+                          : "/travel/no-image-hotel.png"
                       }
                       alt={item.title}
                     />
-
                     <button
                       type="button"
                       className={styles.heartBtn}
@@ -395,15 +359,11 @@ export default function TravelList() {
                   <div className={styles.cardBody}>
                     <h3>{item.title}</h3>
                     <p>{item.addr1}</p>
-
                     <span
-                      className={`${styles.badge} ${getBadgeClass(
-                        item.categoryName
-                      )}`}
+                      className={`${styles.badge} ${getBadgeClass(item.categoryName)}`}
                     >
                       {item.categoryName}
                     </span>
-
                     <div className={styles.cardMeta}>
                       <span>♡ {item.favoriteCount}</span>
                       <span>리뷰 {item.reviewCount}</span>
@@ -426,7 +386,6 @@ export default function TravelList() {
             >
               ≪
             </button>
-
             <button
               type="button"
               disabled={safeCurrentPage === 1}
@@ -435,16 +394,25 @@ export default function TravelList() {
               ‹
             </button>
 
-            {Array.from({ length: totalPage }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                type="button"
-                onClick={() => movePage({ page })}
-                className={safeCurrentPage === page ? styles.current : ""}
-              >
-                {page}
-              </button>
-            ))}
+            {(() => {
+              const pageGroupSize = 7;
+              const currentGroup = Math.ceil(safeCurrentPage / pageGroupSize);
+              const startPage = (currentGroup - 1) * pageGroupSize + 1;
+              const endPage = Math.min(startPage + pageGroupSize - 1, totalPage);
+              return Array.from(
+                { length: endPage - startPage + 1 },
+                (_, i) => startPage + i
+              ).map((page) => (
+                <button
+                  key={page}
+                  type="button"
+                  onClick={() => movePage({ page })}
+                  className={safeCurrentPage === page ? styles.current : ""}
+                >
+                  {page}
+                </button>
+              ));
+            })()}
 
             <button
               type="button"
@@ -453,7 +421,6 @@ export default function TravelList() {
             >
               ›
             </button>
-
             <button
               type="button"
               disabled={safeCurrentPage === totalPage || totalPage === 0}
