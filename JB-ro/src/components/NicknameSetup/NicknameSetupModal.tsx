@@ -57,14 +57,24 @@ const NicknameSetupModal = () => {
     }
     setLoading(true);
     try {
+      const accessToken = localStorage.getItem('accessToken');
+      console.log('토큰 확인:', accessToken ? '있음' : '없음');
+
       const res = await api.patch(
         '/api/users/nickname',
         { nickname },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`
+          }
+        }
       );
-      localStorage.setItem('accessToken', res.data.token);
+      if (res.data.token) {
+        localStorage.setItem('accessToken', res.data.token);
+      }
       router.push('/');
-    } catch {
+    } catch (error) {
+      console.error('닉네임 저장 실패:', error);
       setCheckMsg('저장 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);

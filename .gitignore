@@ -253,3 +253,5 @@ $RECYCLE.BIN/
 .vercel/
 JB-ro/docs/daily-progress-log.md
 JB-ro/docs/mypage-project-context.md
+env.download
+JB-ro/.claude/settings.local.json
