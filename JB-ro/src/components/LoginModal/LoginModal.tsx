@@ -1,5 +1,8 @@
 import styles from './LoginModal.module.css';
 
+// API URL 정의
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081';
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -9,15 +12,15 @@ const LoginModal = ({ isOpen, onClose }: Props) => {
   if (!isOpen) return null;
 
   const handleKakaoLogin = () => {
-    window.location.href = 'http://localhost:8082/oauth2/authorization/kakao';
+    window.location.href = `${API_URL}/oauth2/authorization/kakao`;
   };
 
   const handleNaverLogin = () => {
-    window.location.href = 'http://localhost:8082/oauth2/authorization/naver';
+    window.location.href = `${API_URL}/oauth2/authorization/naver`;
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:8082/oauth2/authorization/google';
+    window.location.href = `${API_URL}/oauth2/authorization/google`;
   };
 
   return (

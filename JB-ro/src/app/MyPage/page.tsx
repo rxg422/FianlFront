@@ -1,6 +1,6 @@
 'use client';
 
-import axios from 'axios';
+import axiosInstance from '@/utils/axiosInstance';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bookmark,
@@ -383,7 +383,7 @@ export default function MyPage() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const response = await axios.get<MyPageProfile>(`${API_BASE_URL}/api/mypage/profile`);
+        const response = await axiosInstance.get<MyPageProfile>('/mypage/profile');
         applyProfile(response.data);
       } catch (error) {
         console.error('마이페이지 프로필 조회 실패', error);
@@ -584,8 +584,8 @@ function ProfileEdit({ profile, onProfileChange, profileImage, onProfileImageCha
     setCheckStatus('validating');
 
     try {
-      const response = await axios.get<NicknameCheckResponse>(
-        `${API_BASE_URL}/api/mypage/profile/nickname-check`,
+      const response = await axiosInstance.get<NicknameCheckResponse>(
+        '/mypage/profile/nickname-check',
         { params: { nickname: nickname.trim() } },
       );
 
@@ -681,7 +681,7 @@ function ProfileEdit({ profile, onProfileChange, profileImage, onProfileImageCha
 
     try {
       if (isNicknameChanged) {
-        const response = await axios.put<ProfileUpdateResponse>(`${API_BASE_URL}/api/mypage/profile`, {
+        const response = await axiosInstance.put<ProfileUpdateResponse>('/mypage/profile', {
           nickname: nextNickname,
         });
 
@@ -708,8 +708,8 @@ function ProfileEdit({ profile, onProfileChange, profileImage, onProfileImageCha
         const formData = new FormData();
         formData.append('profileImage', profileImage.file);
 
-        const imageResponse = await axios.post<ProfileUpdateResponse>(
-          `${API_BASE_URL}/api/mypage/profile/image`,
+        const imageResponse = await axiosInstance.post<ProfileUpdateResponse>(
+          '/mypage/profile/image',
           formData,
           {
             headers: {

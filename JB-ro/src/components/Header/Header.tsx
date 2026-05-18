@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import LoginModal from '../LoginModal/LoginModal';
 import styles from './Header.module.css';
 
@@ -13,21 +14,41 @@ const Header = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [lang, setLang] = useState<'KO' | 'EN'>('KO');
+  const pathname = usePathname();
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (!token) return;
-    try {
-      const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-      const payload = JSON.parse(
-        decodeURIComponent(
-          atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
-        )
-      );
-      setUserInfo({ nickname: payload.nickname, profileImg: payload.profileImg || null });
-    } catch {
-      localStorage.removeItem('accessToken');
-    }
+    const checkToken = () => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setUserInfo(null);
+        return;
+      }
+      try {
+        const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(
+          decodeURIComponent(
+            atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+          )
+        );
+        setUserInfo({ nickname: payload.nickname, profileImg: payload.profileImg || null });
+      } catch {
+        localStorage.removeItem('accessToken');
+        setUserInfo(null);
+      }
+    };
+
+    checkToken();
+
+    // localStorage 변경 감지 (다른 탭에서의 변경)
+    window.addEventListener('storage', checkToken);
+
+    // 커스텀 이벤트로 같은 탭에서의 localStorage 변경 감지
+    window.addEventListener('tokenUpdated', checkToken);
+
+    return () => {
+      window.removeEventListener('storage', checkToken);
+      window.removeEventListener('tokenUpdated', checkToken);
+    };
   }, []);
 
   const handleLogout = () => {
