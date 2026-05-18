@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import styles from './Home.module.css';
+import api from '@/utils/api';
 
 interface TagColor { bg: string; color: string; }
 interface HistoryStory {
@@ -180,9 +181,8 @@ const Home = () => {
 
   // 인기 여행지 API fetch — 실제 엔드포인트로 교체
   useEffect(()=>{
-    fetch('/api/tourList?sort=popular&limit=3')
-      .then(r=>r.json())
-      .then((data: { list: TravelItem[] })=>setPopularSites(data.list?.slice(0,3) || []))
+    api.get('/api/tourList?sort=popular&limit=3')
+      .then(response=>setPopularSites(response.data.list?.slice(0,3) || []))
       .catch(()=>{});
   },[]);
 

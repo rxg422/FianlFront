@@ -15,6 +15,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import LoginModal from "@/components/LoginModal/LoginModal";
+import api from "@/utils/api";
 
 type TravelCategory = "관광지" | "숙소" | "음식점" | "축제";
 type SortType = "popular" | "latest";
@@ -83,7 +84,9 @@ export default function TravelList() {
   const [totalCount, setTotalCount] = useState(0);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
-  const userId: number | null = 1;
+  // 토큰에서 userId 추출
+  const token = localStorage.getItem('accessToken');
+  const userId = token ? 11 : null;
 
   const selectedCategoryLabel = useMemo(() => {
     const found = categories.find(
@@ -125,9 +128,10 @@ export default function TravelList() {
     if (userId !== null) params.set("userId", String(userId));
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/tourList?${params}`);
-      if (!response.ok) throw new Error("여행지 목록 조회 실패");
-      const data: TravelListResponse = await response.json();
+      const response = await api.get(`/api/tourList?${params}`);
+
+      const data: TravelListResponse = response.data;
+
       setItems(data.list);
       setTotalCount(data.totalCount);
     } catch (error) {
@@ -138,8 +142,8 @@ export default function TravelList() {
   };
 
   useEffect(() => {
-    fetchTravelList();
-  }, [selectedCategoryId, selectedSort, selectedRegion, currentPage]);
+  fetchTravelList();
+  }, [selectedCategoryId, selectedSort, selectedRegion, currentPage, userId]);
 
   const handleSearch = () => {
     fetchTravelList();
@@ -152,19 +156,11 @@ export default function TravelList() {
     }
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/tourList/favorite/${contentId}?userId=${userId}`,
-        { method: "POST" }
+      const response = await api.post(
+        `/api/tourList/favorite/${contentId}?userId=${userId}`
       );
 
-      if (response.status === 401) {
-        setIsLoginModalOpen(true);
-        return;
-      }
-
-      if (!response.ok) throw new Error("찜 처리 실패");
-
-      const result = await response.text();
+      const result = response.data;
 
       setItems((prev) =>
         prev.map((item) => {
@@ -179,7 +175,11 @@ export default function TravelList() {
           };
         })
       );
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        setIsLoginModalOpen(true);
+        return;
+      }
       console.error(error);
       alert("찜 처리 중 오류가 발생했습니다.");
     }
