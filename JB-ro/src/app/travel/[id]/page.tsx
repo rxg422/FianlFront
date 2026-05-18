@@ -331,14 +331,11 @@ export default function TravelDetailPage() {
   const handleToggleFavorite = async () => {
     //if (!requireLogin()) return;(나중에 주석 풀어야한다)
     const res = await fetch(`/api/tourDetail/${contentId}/favorite`, {
-    method: "POST",
-    headers: getAuthHeader(),
-  });
-
-  if (!res.ok) {
-    console.log("찜하기 API 실패");
-  }
-};
+      method: "POST",
+      headers: getAuthHeader(),
+    });
+    if (res.ok) setLiked((prev) => !prev);
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -397,7 +394,7 @@ export default function TravelDetailPage() {
   };
 
   const openReportModal = (reviewId: number) => {
-    //if (!requireLogin()) return;(나중에 풀어야함)
+    //if (!requireLogin()) return;(나중에)
     setReportTargetId(reviewId);
     setReportType("");
     setReportReason("");
@@ -693,12 +690,12 @@ export default function TravelDetailPage() {
           <h2>리뷰 ({totalReviews})</h2>
 
           <div className={styles.reviewForm}>
-            <textarea
-  maxLength={500}
-  placeholder="리뷰를 남겨주세요."
-  value={reviewText}
-  onChange={(e) => setReviewText(e.target.value)}
-/>
+            <textarea maxLength={500}
+              placeholder={userInfo ? "리뷰를 남겨주세요." : "로그인 후 리뷰를 작성할 수 있습니다."}
+              value={reviewText}
+              disabled={!userInfo}
+              onChange={(e) => setReviewText(e.target.value)}
+              onClick={() => { if (!userInfo) setIsLoginModalOpen(true); }} />
             <div className={styles.reviewFormBottom}>
               <span>{reviewText.length} / 500</span>
               <div className={styles.reviewActions}>

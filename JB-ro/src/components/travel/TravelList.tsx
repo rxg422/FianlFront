@@ -78,7 +78,7 @@ export default function TravelList() {
   const selectedSort = (searchParams.get("sort") as SortType) || "popular";
   const currentPage = Number(searchParams.get("page") || "1");
 
-  const [keyword, setKeyword] = useState(searchParams.get("keyword") || "");
+  const [keyword, setKeyword] = useState("");
   const [items, setItems] = useState<TravelItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -97,23 +97,16 @@ export default function TravelList() {
     region = selectedRegion,
     sort = selectedSort,
     page = 1,
-    keywordValue = keyword,
   }: {
     categoryId?: string | null;
     region?: string;
     sort?: SortType;
     page?: number;
-    keywordValue?: string;
   }) => {
     const params = new URLSearchParams();
     if (categoryId) params.set("categoryId", categoryId);
-<<<<<<< HEAD
     if (region) params.set("region", region);
-=======
-    if (region && region !== "전체 지역") params.set("region", region);
->>>>>>> origin/main
     if (sort !== "popular") params.set("sort", sort);
-    if (keywordValue.trim()) params.set("keyword", keywordValue.trim());
     if (page !== 1) params.set("page", String(page));
 
     const query = params.toString();
@@ -124,32 +117,16 @@ export default function TravelList() {
     const params = new URLSearchParams();
 
     if (selectedCategoryId) params.set("categoryId", selectedCategoryId);
-<<<<<<< HEAD
     if (keyword.trim()) params.set("keyword", keyword.trim());
     if (selectedSort) params.set("sort", selectedSort);
     if (selectedRegion) params.set("regionCd", selectedRegion);
     params.set("page", String(currentPage));
     params.set("limit", String(ITEMS_PER_PAGE));
-=======
-    if (selectedRegion !== "전체 지역") params.set("region", selectedRegion);
-    if (keyword.trim()) params.set("keyword", keyword.trim());
-
-    params.set("sort", selectedSort);
-    params.set("page", String(currentPage));
-    params.set("limit", String(ITEMS_PER_PAGE));
-
->>>>>>> origin/main
     if (userId !== null) params.set("userId", String(userId));
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/tourList?${params}`);
-<<<<<<< HEAD
       if (!response.ok) throw new Error("여행지 목록 조회 실패");
-=======
-
-      if (!response.ok) throw new Error("여행지 목록 조회 실패");
-
->>>>>>> origin/main
       const data: TravelListResponse = await response.json();
       setItems(data.list);
       setTotalCount(data.totalCount);
@@ -161,19 +138,11 @@ export default function TravelList() {
   };
 
   useEffect(() => {
-    setKeyword(searchParams.get("keyword") || "");
-  }, [searchParams]);
-
-  useEffect(() => {
     fetchTravelList();
-<<<<<<< HEAD
   }, [selectedCategoryId, selectedSort, selectedRegion, currentPage]);
-=======
-  }, [selectedCategoryId, selectedRegion, selectedSort, currentPage, searchParams]);
->>>>>>> origin/main
 
   const handleSearch = () => {
-    movePage({ page: 1, keywordValue: keyword });
+    fetchTravelList();
   };
 
   const toggleLike = async (contentId: number) => {
@@ -223,27 +192,8 @@ export default function TravelList() {
     return styles.festival;
   };
 
-  const getDefaultImage = (categoryId: number) => {
-    if (categoryId === 1) return "/travels/no-image-attraction.png";
-    if (categoryId === 2) return "/travels/no-image-food.png";
-    if (categoryId === 3) return "/travels/no-image-festival.png";
-    if (categoryId === 4) return "/travels/no-image-hotel.png";
-    return "/images/travel/no-image-attraction.jpg";
-  };
-
   const totalPage = Math.ceil(totalCount / ITEMS_PER_PAGE);
   const safeCurrentPage = totalPage === 0 ? 1 : Math.min(currentPage, totalPage);
-
-  // 현재 페이지 기준 앞뒤 3개만 표시
-  const pageNumbers = useMemo(() => {
-    const start = Math.max(1, safeCurrentPage - 3);
-    const end = Math.min(totalPage, safeCurrentPage + 3);
-    const pages = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }, [safeCurrentPage, totalPage]);
 
   return (
     <>
@@ -379,7 +329,6 @@ export default function TravelList() {
                       src={
                         item.firstImage && item.firstImage.trim() !== ""
                           ? item.firstImage
-<<<<<<< HEAD
                           : item.categoryName === "관광지"
                           ? "/travel/no-image-attraction.png"
                           : item.categoryName === "음식점"
@@ -387,9 +336,6 @@ export default function TravelList() {
                           : item.categoryName === "축제"
                           ? "/travel/no-image-festival.png"
                           : "/travel/no-image-hotel.png"
-=======
-                          : getDefaultImage(item.categoryId)
->>>>>>> origin/main
                       }
                       alt={item.title}
                     />
@@ -402,7 +348,7 @@ export default function TravelList() {
                       }}
                     >
                       <Heart
-                        size={22}
+                        size={25}
                         strokeWidth={2.4}
                         fill={isLiked ? "#ff4d6d" : "transparent"}
                         color="#ff4d6d"
@@ -448,7 +394,6 @@ export default function TravelList() {
               ‹
             </button>
 
-<<<<<<< HEAD
             {(() => {
               const pageGroupSize = 7;
               const currentGroup = Math.ceil(safeCurrentPage / pageGroupSize);
@@ -468,18 +413,6 @@ export default function TravelList() {
                 </button>
               ));
             })()}
-=======
-            {pageNumbers.map((page) => (
-              <button
-                key={page}
-                type="button"
-                onClick={() => movePage({ page })}
-                className={safeCurrentPage === page ? styles.current : ""}
-              >
-                {page}
-              </button>
-            ))}
->>>>>>> origin/main
 
             <button
               type="button"
