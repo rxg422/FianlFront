@@ -5,7 +5,6 @@
 }
 
 /* 사이드바 */
-
 .sidebar {
   width: 200px;
   min-width: 200px;
@@ -25,7 +24,6 @@
 }
 
 /* 버튼 */
-
 .sideBtn,
 .regionBtn,
 .sortBox {
@@ -44,7 +42,7 @@
 .sideBtn {
   height: 40px;
   padding: 0 12px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-size: 14px;
   font-weight: 700;
 }
@@ -52,7 +50,7 @@
 .regionBtn {
   height: 34px;
   padding: 0 10px;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
   font-size: 13px;
   font-weight: 600;
 }
@@ -62,11 +60,10 @@
   padding: 0 12px;
   justify-content: space-between;
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 /* 카테고리 컬러 */
-
 .active {
   background: #fff4cc;
   border-color: #f4d24f;
@@ -104,79 +101,84 @@
 }
 
 /* 콘텐츠 */
-
 .content {
   flex: 1;
-  padding: 28px 34px;
+  padding: 28px 24px;
   min-width: 0;
 }
 
 /* 검색창 */
-
 .searchBox {
-  height: 54px;
+  height: 50px;
   border: 1px solid #9ecfb7;
   border-radius: 10px;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  margin-bottom: 28px;
+  padding: 0 16px;
+  margin-bottom: 24px;
 }
 
 .searchBox input {
   flex: 1;
   border: none;
   outline: none;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 /* 상단 */
-
 .topBar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .topBar h2 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 900;
 }
 
 .topBar h2 span {
-  font-size: 14px;
+  font-size: 13px;
   color: #666;
-  margin-left: 10px;
+  margin-left: 8px;
 }
 
 /* 정렬 */
-
 .sortArea {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .sortArea select {
-  height: 42px;
+  height: 38px;
   border: 1px solid #ddd;
   background: white;
   border-radius: 8px;
-  padding: 0 14px;
+  padding: 0 12px;
   font-weight: 700;
   cursor: pointer;
+  font-size: 14px;
 }
 
-.emptyText {
-  margin-top: 40px;
-  text-align: center;
-  color: #777;
-  font-size: 15px;
+.resetBtn {
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid #e4e4e4;
+  background: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.resetBtn:hover {
+  background: #f5f5f5;
 }
 
 /* 카드 그리드 - 5열 */
-
 .grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -184,40 +186,33 @@
 }
 
 /* 카드 */
-
 .card {
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   overflow: hidden;
   background: white;
-  transition: 0.2s;
   cursor: pointer;
+  transition: 0.2s;
 }
 
 .card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 /* 이미지 */
-
 .imageWrap {
   position: relative;
-  width: 100%;
   height: 150px;
-  overflow: hidden;
-  background: #f0f0f0;
 }
 
 .imageWrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
 
 /* 찜 버튼 */
-
 .heartBtn {
   position: absolute;
   top: 8px;
@@ -226,19 +221,17 @@
   background: transparent;
   cursor: pointer;
   padding: 0;
-  z-index: 1;
 }
 
 /* 카드 내용 */
-
 .cardBody {
-  padding: 10px 12px;
+  padding: 12px;
 }
 
 .cardBody h3 {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -254,7 +247,6 @@
 }
 
 /* 뱃지 */
-
 .badge {
   display: inline-block;
   padding: 3px 8px;
@@ -283,57 +275,66 @@
   color: #7c3aed;
 }
 
-/* 페이징 */
-
-.pagination {
-  margin-top: 36px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-}
-
-.pagination button {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 16px;
-  padding: 4px 8px;
-}
-
-.current {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #173c35 !important;
-  color: white !important;
-  font-weight: 800;
-}
-
-.resetBtn {
-  height: 42px;
-  padding: 0 16px;
-  border-radius: 12px;
-  border: 1px solid #e4e4e4;
-  background: white;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.resetBtn:hover {
-  background: #f5f5f5;
-}
-
 .cardMeta {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   margin-top: 8px;
   font-size: 12px;
   color: #777;
 }
 
+.emptyText {
+  margin-top: 40px;
+  text-align: center;
+  color: #777;
+  font-size: 15px;
+}
+
+/* 페이징 */
+.pagination {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.pagination button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  transition: 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: #f0fdf4;
+  border-color: #83c5a3;
+}
+
+.pagination button:disabled {
+  color: #ccc;
+  cursor: default;
+  border-color: #f0f0f0;
+}
+
+.current {
+  background: #173c35 !important;
+  color: white !important;
+  border-color: #173c35 !important;
+  font-weight: 800 !important;
+}
+
+/* 기타 */
 .wishActive {
   background: #e9435a;
   border-color: #e9435a;
