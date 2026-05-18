@@ -3,7 +3,7 @@ import historyData from './jeonbuk_history_full.json';
 
 // 1. [우리 백엔드용] 인터셉터가 있는 인스턴스
 const api = axios.create({
-  baseURL: 'http://localhost:8082',
+  baseURL: 'http://localhost:8081',
   withCredentials: true,
 });
 
