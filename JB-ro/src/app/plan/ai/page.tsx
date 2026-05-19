@@ -2,13 +2,13 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Calendar, MapPin, Sparkles, Plus, ChevronRight, Info, X, ChevronDown 
+import {
+  Calendar, MapPin, Sparkles, Plus, ChevronRight, Info, X, ChevronDown
 } from 'lucide-react';
 import styles from './ai.module.css';
 import api from '@/utils/api'; // 기존에 사용하시던 api 유틸리티
 
-const DURATIONS = ['당일치기', '1박 2일', '2박 3일', '3박 이상'];
+const DURATIONS = ['당일치기', '1박 2일', '2박 3일', '3박 4일'];
 const JEONBUK_REGIONS = ['전주', '군산', '익산', '정읍', '남원', '김제', '완주', '진안', '무주', '장수', '임실', '순창', '고창', '부안'];
 
 const STYLE_CATEGORIES = [
@@ -57,14 +57,20 @@ export default function AiPlanPage() {
     setIsLoading(true);
     try {
       // 1. 스프링 부트 백엔드 에이전트 호출
-      const response = await api.post('/api/plan/generate', {
+      const response = await api.post('/api/ai/planner', {
         duration: selectedDuration,
         regions: selectedRegions,
-        styles: selectedStyles
+        styles: selectedStyles,
       });
+
+      // const data = await response.data;
+      // console.log(data);
+
 
       // 2. 백엔드에서 생성된 데이터(CourseResponse) 받기
       const generatedPlan = response.data;
+
+      // console.log(response.data)
 
       // 3. 데이터를 상세 페이지에서 쓸 수 있도록 임시 저장 (sessionStorage 권장)
       sessionStorage.setItem('lastGeneratedPlan', JSON.stringify(generatedPlan));
@@ -137,8 +143,8 @@ export default function AiPlanPage() {
         </div>
 
         {/* 생성 버튼에 클릭 이벤트와 로딩 상태 적용 */}
-        <button 
-          className={styles.aiBtn} 
+        <button
+          className={styles.aiBtn}
           onClick={handleGeneratePlan}
           disabled={isLoading}
         >
@@ -154,7 +160,7 @@ export default function AiPlanPage() {
         </div>
         <div className={styles.courseGrid}>
           {DEFAULT_COURSES.map(c => (
-            <div key={c.id} className={styles.card} onClick={() => router.push(`/plan/ai/${c.id}`)} style={{cursor: 'pointer'}}>
+            <div key={c.id} className={styles.card} onClick={() => router.push(`/plan/ai/${c.id}`)} style={{ cursor: 'pointer' }}>
               <div className={styles.imgWrap}>
                 <img src={c.img} alt={c.title} />
                 <div className={styles.bAi}>추천</div>
