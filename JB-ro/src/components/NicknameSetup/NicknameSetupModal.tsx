@@ -34,7 +34,7 @@ const NicknameSetupModal = () => {
   const validateNickname = (value: string): string => {
     if (!value.trim()) return '닉네임을 입력해주세요.';
     if (value.length < 2 || value.length > 12) return '닉네임은 2~12자리로 입력해주세요.';
-    if (!/^[가-힣a-zA-Z]{2,12}$/.test(value)) return '닉네임은 한글과 영어만 사용 가능합니다.';
+    if (!/^[가-힣a-zA-Z0-9]{2,12}$/.test(value)) return '닉네임은 한글,영어,숫자만 사용 가능합니다.';
     return '';
   };
 

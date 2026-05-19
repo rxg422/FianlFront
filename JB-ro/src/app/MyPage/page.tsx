@@ -1,6 +1,7 @@
 'use client';
 
 import axiosInstance from '@/utils/axiosInstance';
+import { useRouter } from 'next/navigation';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bookmark,
@@ -73,6 +74,12 @@ type ProfileUpdateResponse = {
   profile?: MyPageProfile;
 };
 
+type WithdrawResponse = {
+  success: boolean;
+  message: string;
+  redirectUrl?: string | null;
+};
+
 type MenuItem = {
   id: MenuId;
   label: string;
@@ -105,6 +112,10 @@ type TravelCandidate = {
   name: string;
   source: 'AI 추천' | '찜 목록' | '검색';
   type: FavoriteType;
+};
+
+type JeonbukRegion = {
+  name: string;
 };
 
 type Review = {
@@ -158,7 +169,23 @@ type TravelKeywordFilter = '전체' | FavoriteTab;
 
 type CalendarMonth = {
   label: string;
-  dates: string[];
+  dates: CalendarDate[];
+};
+
+type CalendarDate = {
+  key: string;
+  date: string | null;
+  dateText: string;
+  dayName: string;
+  dayNumber: string;
+};
+
+type SvgRegion = {
+  id: string;
+  name: string;
+  d: string;
+  labelX: number;
+  labelY: number;
 };
 
 type StatProps = {
@@ -175,6 +202,8 @@ type ToastState = {
   type: ToastType;
   message: string;
 } | null;
+
+type ProfileLoadState = 'checking' | 'loading' | 'success' | 'error';
 
 type PlaceListProps = {
   places?: FavoritePlace[];
@@ -314,31 +343,225 @@ const reports: Report[] = [
   { target: '군산 근대문화거리 리뷰', reason: '허위 정보 의심', status: '접수', category: '리뷰', createdAt: '2026.05.01 10:12' },
 ];
 
+const jeonbukRegions: JeonbukRegion[] = [
+  { name: '전주' },
+  { name: '군산' },
+  { name: '익산' },
+  { name: '정읍' },
+  { name: '남원' },
+  { name: '김제' },
+  { name: '완주' },
+  { name: '진안' },
+  { name: '무주' },
+  { name: '장수' },
+  { name: '임실' },
+  { name: '순창' },
+  { name: '고창' },
+  { name: '부안' },
+];
+
 const allowedProfileImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8081/api';
+const holidayDateValues = new Set(['2026.05.24', '2026.06.03', '2026.06.06']);
+
+const calendarWeekNames = ['일', '월', '화', '수', '목', '금', '토'];
+const svgWidth = 760;
+const svgHeight = 620;
+const svgPadding = 24;
+const jeonbukNameMap: Record<string, string> = {
+  Buan: '부안',
+  Gimje: '김제',
+  Gochang: '고창',
+  Gunsan: '군산',
+  Iksan: '익산',
+  Imsil: '임실',
+  Jangsu: '장수',
+  Jeongeup: '정읍',
+  Jeonju: '전주',
+  Jinan: '진안',
+  Muju: '무주',
+  Namwon: '남원',
+  Sunchang: '순창',
+  Wanju: '완주',
+};
+const jeonbukRegionOrder = ['군산', '익산', '완주', '진안', '무주', '김제', '전주', '부안', '정읍', '임실', '장수', '고창', '순창', '남원'];
+const labelOffset: Record<string, { x: number; y: number }> = {
+  군산: { x: 15, y: 0 },
+  김제: { x: 16, y: 6 },
+  전주: { x: -10, y: 10 },
+  완주: { x: 10, y: -20 },
+  익산: { x: 0, y: 4 },
+  무주: { x: 2, y: 4 },
+  진안: { x: 8, y: 2 },
+  장수: { x: 5, y: 8 },
+  임실: { x: 0, y: 8 },
+  순창: { x: 10, y: 12 },
+  정읍: { x: 0, y: 8 },
+  고창: { x: 15, y: 14 },
+  부안: { x: 10, y: 2 },
+  남원: { x: 2, y: 8 },
+};
+
+type Coord = [number, number];
+type Ring = Coord[];
+type Polygon = Ring[];
+
+const pad2 = (value: number) => String(value).padStart(2, '0');
+const formatCalendarDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = pad2(date.getMonth() + 1);
+  const day = pad2(date.getDate());
+  const week = calendarWeekNames[date.getDay()];
+
+  return `${year}.${month}.${day}(${week})`;
+};
+const createCalendarMonth = (year: number, month: number): CalendarMonth => {
+  const firstDate = new Date(year, month - 1, 1);
+  const lastDate = new Date(year, month, 0);
+  const dates: CalendarDate[] = [];
+
+  for (let index = 0; index < firstDate.getDay(); index += 1) {
+    dates.push({
+      key: `${year}-${month}-blank-${index}`,
+      date: null,
+      dateText: '',
+      dayName: '',
+      dayNumber: '',
+    });
+  }
+
+  for (let day = 1; day <= lastDate.getDate(); day += 1) {
+    const date = new Date(year, month - 1, day);
+    dates.push({
+      key: `${year}-${month}-${day}`,
+      date: formatCalendarDate(date),
+      dateText: `${year}.${pad2(month)}.${pad2(day)}`,
+      dayName: calendarWeekNames[date.getDay()],
+      dayNumber: pad2(day),
+    });
+  }
+
+  return {
+    label: `${year}년 ${month}월`,
+    dates,
+  };
+};
+
+const isCoord = (value: unknown): value is Coord => (
+  Array.isArray(value) && value.length >= 2 && typeof value[0] === 'number' && typeof value[1] === 'number'
+);
+const getRingArea = (ring: Ring) => {
+  if (ring.length < 3) return 0;
+
+  let area = 0;
+  for (let index = 0; index < ring.length; index += 1) {
+    const [x1, y1] = ring[index];
+    const [x2, y2] = ring[(index + 1) % ring.length];
+    area += x1 * y2 - x2 * y1;
+  }
+
+  return Math.abs(area / 2);
+};
+const toPolygonCoords = (polygon: unknown[]): Polygon | null => {
+  const rings = polygon
+    .map((ring) => (Array.isArray(ring) ? (ring as unknown[]).filter(isCoord) as Ring : null))
+    .filter((ring): ring is Ring => ring !== null && ring.length > 0);
+
+  return rings.length > 0 ? rings : null;
+};
+const getRenderablePolygons = (coordinates: unknown, type: string): Polygon[] => {
+  const raw: unknown[] = type === 'Polygon' ? [coordinates] : Array.isArray(coordinates) ? coordinates : [];
+  const valid = raw
+    .map((polygon) => (Array.isArray(polygon) ? toPolygonCoords(polygon) : null))
+    .filter((polygon): polygon is Polygon => polygon !== null && polygon[0] !== undefined && polygon[0].length >= 20 && getRingArea(polygon[0]) > 0);
+
+  if (valid.length === 0) return [];
+
+  const largest = Math.max(...valid.map((polygon) => getRingArea(polygon[0])));
+  return valid.filter((polygon) => getRingArea(polygon[0]) >= largest * 0.03);
+};
+const collectPoints = (coordinates: unknown): Coord[] => {
+  const result: Coord[] = [];
+  const stack: unknown[] = [coordinates];
+
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!Array.isArray(current)) continue;
+    if (isCoord(current)) result.push(current);
+    else current.forEach((item) => stack.push(item));
+  }
+
+  return result;
+};
+const getLargestRingCenter = (
+  coordinates: unknown,
+  type: string,
+  transform: (point: Coord) => [number, number],
+) => {
+  const polygons = getRenderablePolygons(coordinates, type);
+  if (polygons.length === 0) return { x: svgWidth / 2, y: svgHeight / 2 };
+
+  const largest = polygons.reduce((a, b) => (getRingArea(b[0]) > getRingArea(a[0]) ? b : a));
+  const points = largest[0].map(transform);
+  const sum = points.reduce((acc, point) => ({ x: acc.x + point[0], y: acc.y + point[1] }), { x: 0, y: 0 });
+
+  return { x: sum.x / points.length, y: sum.y / points.length };
+};
+const makePath = (
+  coordinates: unknown,
+  type: string,
+  transform: (point: Coord) => [number, number],
+) => getRenderablePolygons(coordinates, type)
+  .map((polygon) => polygon
+    .map((ring) => `${ring.map((point, index) => {
+      const [x, y] = transform(point);
+      return `${index === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)}`;
+    }).join(' ')} Z`)
+    .join(' '))
+  .join(' ');
+const convertGeoJsonToSvgRegions = (geoJson: { features?: { properties: Record<string, unknown>; geometry: { type: string; coordinates: unknown } }[] }): SvgRegion[] => {
+  const features = (geoJson.features || []).filter((feature) => feature.properties.NAME_1 === 'Jeollabuk-do');
+  const allPoints = features.flatMap((feature) => getRenderablePolygons(feature.geometry.coordinates, feature.geometry.type).flatMap(collectPoints));
+
+  if (allPoints.length === 0) return [];
+
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minY = Infinity;
+  let maxY = -Infinity;
+
+  allPoints.forEach(([x, y]) => {
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  });
+
+  const scale = Math.min((svgWidth - svgPadding * 2) / (maxX - minX), (svgHeight - svgPadding * 2) / (maxY - minY));
+  const offsetX = (svgWidth - (maxX - minX) * scale) / 2;
+  const offsetY = (svgHeight - (maxY - minY) * scale) / 2;
+  const transform = ([lng, lat]: Coord): [number, number] => [offsetX + (lng - minX) * scale, svgHeight - offsetY - (lat - minY) * scale];
+
+  return features
+    .map((feature, index) => {
+      const engName = String(feature.properties.NAME_2 || '');
+      const name = jeonbukNameMap[engName] || engName || `지역${index + 1}`;
+      const label = getLargestRingCenter(feature.geometry.coordinates, feature.geometry.type, transform);
+      const offset = labelOffset[name] || { x: 0, y: 0 };
+
+      return {
+        id: `${engName}-${index}`,
+        name,
+        d: makePath(feature.geometry.coordinates, feature.geometry.type, transform),
+        labelX: label.x + offset.x,
+        labelY: label.y + offset.y,
+      };
+    })
+    .sort((a, b) => jeonbukRegionOrder.indexOf(a.name) - jeonbukRegionOrder.indexOf(b.name));
+};
 
 const resolveProfileImageSrc = (profileUrl?: string | null) => {
   if (!profileUrl) return '';
-  if (profileUrl.startsWith('data:') || profileUrl.startsWith('blob:')) return profileUrl;
-
-  try {
-    const apiUrl = new URL(API_BASE_URL);
-    const imageUrl = new URL(profileUrl);
-    const contextPath = apiUrl.pathname.replace(/\/$/, '');
-
-    if (
-      contextPath
-      && imageUrl.origin === apiUrl.origin
-      && imageUrl.pathname.startsWith('/uploads/')
-      && !imageUrl.pathname.startsWith(`${contextPath}/uploads/`)
-    ) {
-      imageUrl.pathname = `${contextPath}${imageUrl.pathname}`;
-    }
-
-    return imageUrl.toString();
-  } catch {
-    return profileUrl;
-  }
+  return profileUrl;
 };
 
 const recentActivities: Activity[] = [
@@ -364,9 +587,11 @@ type ProfileEditProps = {
 };
 
 export default function MyPage() {
+  const router = useRouter();
   const [activeMenu, setActiveMenu] = useState<MenuId>('dashboard');
   const [profile, setProfile] = useState<MyPageProfile | null>(null);
   const [profileImage, setProfileImage] = useState<ProfileImage | null>(null);
+  const [profileLoadState, setProfileLoadState] = useState<ProfileLoadState>('checking');
 
   const applyProfile = useCallback((nextProfile: MyPageProfile) => {
     setProfile(nextProfile);
@@ -382,16 +607,26 @@ export default function MyPage() {
 
   useEffect(() => {
     const loadProfile = async () => {
+      const accessToken = localStorage.getItem('accessToken');
+
+      if (!accessToken) {
+        router.replace('/?loginError=' + encodeURIComponent('마이페이지는 로그인 후 이용할 수 있습니다.'));
+        return;
+      }
+
       try {
+        setProfileLoadState('loading');
         const response = await axiosInstance.get<MyPageProfile>('/mypage/profile');
         applyProfile(response.data);
+        setProfileLoadState('success');
       } catch (error) {
         console.error('마이페이지 프로필 조회 실패', error);
+        setProfileLoadState('error');
       }
     };
 
-    loadProfile();
-  }, [applyProfile]);
+    void loadProfile();
+  }, [applyProfile, router]);
 
   const moveMenu = useCallback((menuId: MenuId) => {
     setActiveMenu(menuId);
@@ -405,6 +640,17 @@ export default function MyPage() {
 
   return (
     <main className={styles.page}>
+      {profileLoadState === 'checking' || profileLoadState === 'loading' ? (
+        <section className={styles.profileStatusBox}>
+          <strong>마이페이지 정보를 확인하는 중입니다.</strong>
+          <p>로그인 정보와 회원 프로필을 불러오고 있습니다.</p>
+        </section>
+      ) : profileLoadState === 'error' ? (
+        <section className={styles.profileStatusBox}>
+          <strong>마이페이지 정보를 불러오지 못했습니다.</strong>
+          <p>로그인 세션 또는 백엔드 API 응답을 확인해주세요.</p>
+        </section>
+      ) : (
 
       <div className={styles.layout}>
         <aside className={styles.sidebar}>
@@ -455,6 +701,7 @@ export default function MyPage() {
           {activeMenu === 'withdraw' && <Withdraw />}
         </section>
       </div>
+      )}
     </main>
   );
 }
@@ -475,6 +722,7 @@ function ColorToken({ name, label, value }: ColorTokenProps) {
 
 function ProfileCard({ profile, profileImageUrl }: ProfileCardProps) {
   const imageUrl = profileImageUrl ?? profile?.profile ?? undefined;
+  const fallbackText = profile?.nickname?.trim().slice(0, 1) || '회원';
 
   return (
     <div className={styles.profileCard}>
@@ -483,7 +731,7 @@ function ProfileCard({ profile, profileImageUrl }: ProfileCardProps) {
           {imageUrl ? (
             <img key={imageUrl} src={imageUrl} alt="프로필 이미지" className={styles.avatarImage} />
           ) : (
-            '이미지'
+            fallbackText
           )}
         </div>
       </div>
@@ -541,7 +789,7 @@ function ProfileEdit({ profile, onProfileChange, profileImage, onProfileImageCha
   const [nickname, setNickname] = useState(profile?.nickname ?? '');
   const [checkStatus, setCheckStatus] = useState<NicknameCheckStatus>('idle');
   const [checkMessage, setCheckMessage] = useState('닉네임은 한글, 영문, 숫자 2~12자만 사용할 수 있습니다.');
-  const [profileImageMessage, setProfileImageMessage] = useState('jpg, png, webp 이미지만 업로드할 수 있습니다.');
+  const [profileImageMessage, setProfileImageMessage] = useState('소셜 로그인 프로필 이미지가 기본으로 표시되며, jpg, png, webp 파일로 변경할 수 있습니다.');
   const [toast, setToast] = useState<ToastState>(null);
 
   useEffect(() => {
@@ -550,6 +798,11 @@ function ProfileEdit({ profile, onProfileChange, profileImage, onProfileImageCha
     setNickname(profile.nickname);
     setCheckStatus('idle');
     setCheckMessage('닉네임은 한글, 영문, 숫자 2~12자만 사용할 수 있습니다.');
+    setProfileImageMessage(
+      profile.profile
+        ? '소셜 로그인 또는 사용자가 설정한 프로필 이미지가 표시됩니다.'
+        : '현재 등록된 프로필 이미지가 없습니다. jpg, png, webp 파일로 등록할 수 있습니다.',
+    );
   }, [profile]);
 
   const validateNickname = (value: string) => {
@@ -702,6 +955,7 @@ function ProfileEdit({ profile, onProfileChange, profileImage, onProfileImageCha
         }
 
         onProfileChange(response.data.profile);
+        window.dispatchEvent(new Event('profileUpdated'));
       }
 
       if (isProfileImageChanged && profileImage?.file) {
@@ -735,6 +989,7 @@ function ProfileEdit({ profile, onProfileChange, profileImage, onProfileImageCha
         }
 
         onProfileChange(imageResponse.data.profile);
+        window.dispatchEvent(new Event('profileUpdated'));
       }
 
       setCheckStatus('idle');
@@ -793,32 +1048,44 @@ function ProfileEdit({ profile, onProfileChange, profileImage, onProfileImageCha
         </small>
       </label>
 
-      <label className={styles.field}>
+      <div className={styles.field}>
         <span>프로필 이미지</span>
-        {profileImage && (
-          <div className={styles.profilePreview} aria-label="선택한 프로필 이미지 미리보기">
-            <img key={profileImage.url} src={profileImage.url} alt="선택한 프로필 이미지" />
+        <div className={styles.profileImageEditor}>
+          <div className={styles.profilePreview} aria-label="프로필 이미지 미리보기">
+            {profileImage?.url ? (
+              <img key={profileImage.url} src={profileImage.url} alt="프로필 이미지 미리보기" />
+            ) : (
+              <span>{profile?.nickname?.trim().slice(0, 1) || '회원'}</span>
+            )}
           </div>
-        )}
-        <div className={styles.inputRow}>
-          <input type="text" readOnly value={profileImage?.name ?? ''} placeholder="선택된 파일 없음" />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className={styles.hiddenFileInput}
-            onChange={handleProfileImageSelect}
-          />
-          <button
-            type="button"
-            className={styles.secondaryButton}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            첨부파일
-          </button>
+
+          <div className={styles.profileImageControls}>
+            <div className={styles.inputRow}>
+              <input
+                type="text"
+                readOnly
+                value={profileImage?.name ?? ''}
+                placeholder={profile?.profile ? '현재 프로필 이미지' : '등록된 프로필 이미지 없음'}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className={styles.hiddenFileInput}
+                onChange={handleProfileImageSelect}
+              />
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                첨부파일
+              </button>
+            </div>
+            <small>{profileImageMessage}</small>
+          </div>
         </div>
-        <small>{profileImageMessage}</small>
-      </label>
+      </div>
 
       <div className={styles.actions}>
         <button type="submit" className={styles.primaryButton}>수정완료</button>
@@ -935,11 +1202,11 @@ function Planner() {
     title: '',
     period: '날짜를 선택해주세요',
     status: '비공개',
-    region: '지역 미선택',
+    region: '지역을 선택해주세요.',
     theme: '테마 미선택',
     updatedAt: '',
     desc: '',
-    days: [['DAY 1', '새 일정']],
+    days: [['DAY 1']],
   };
   const handlePlannerComplete = () => {
     setSelectedPlanner(null);
@@ -1046,10 +1313,6 @@ function Planner() {
                   <span>{planner.status}</span>
                   <small>{planner.period}</small>
                 </div>
-                <div className={styles.plannerTagRow}>
-                  <em>{planner.region}</em>
-                  <em>{planner.theme}</em>
-                </div>
                 <strong>{planner.title}</strong>
                 <p>{planner.desc}</p>
                 <div className={styles.plannerMeta}>
@@ -1098,6 +1361,10 @@ function PlannerDetailModal({ planner, onClose, onComplete, variant = 'detail' }
   const [isEditMode, setIsEditMode] = useState(isCreateMode);
   const [editDays, setEditDays] = useState<Planner['days']>(planner.days);
   const [editPeriod, setEditPeriod] = useState(planner.period);
+  const [editRegion, setEditRegion] = useState(
+    planner.region === '지역 미선택' || planner.region === '지역을 선택해주세요.' ? '' : planner.region,
+  );
+  const [isPublic, setIsPublic] = useState(planner.status === '공개');
   const [scheduleModal, setScheduleModal] = useState<PlannerScheduleModal>(null);
   const [travelAddSource, setTravelAddSource] = useState<TravelAddSource>('찜 목록');
   const [travelKeywordFilter, setTravelKeywordFilter] = useState<TravelKeywordFilter>('전체');
@@ -1105,70 +1372,63 @@ function PlannerDetailModal({ planner, onClose, onComplete, variant = 'detail' }
   const [calendarStartDate, setCalendarStartDate] = useState('');
   const [calendarEndDate, setCalendarEndDate] = useState('');
   const [calendarMonthIndex, setCalendarMonthIndex] = useState(0);
-  const calendarMonths: CalendarMonth[] = [
-    {
-      label: '2026년 5월',
-      dates: [
-        '2026.05.18(월)',
-        '2026.05.19(화)',
-        '2026.05.20(수)',
-        '2026.05.21(목)',
-        '2026.05.22(금)',
-        '2026.05.23(토)',
-        '2026.05.24(일)',
-        '2026.05.25(월)',
-        '2026.05.26(화)',
-        '2026.05.27(수)',
-        '2026.05.28(목)',
-        '2026.05.29(금)',
-        '2026.05.30(토)',
-        '2026.05.31(일)',
-      ],
-    },
-    {
-      label: '2026년 6월',
-      dates: [
-        '2026.06.01(월)',
-        '2026.06.02(화)',
-        '2026.06.03(수)',
-        '2026.06.04(목)',
-        '2026.06.05(금)',
-        '2026.06.06(토)',
-        '2026.06.07(일)',
-        '2026.06.08(월)',
-        '2026.06.09(화)',
-        '2026.06.10(수)',
-        '2026.06.11(목)',
-        '2026.06.12(금)',
-        '2026.06.13(토)',
-        '2026.06.14(일)',
-      ],
-    },
-    {
-      label: '2026년 7월',
-      dates: [
-        '2026.07.01(수)',
-        '2026.07.02(목)',
-        '2026.07.03(금)',
-        '2026.07.04(토)',
-        '2026.07.05(일)',
-        '2026.07.06(월)',
-        '2026.07.07(화)',
-        '2026.07.08(수)',
-        '2026.07.09(목)',
-        '2026.07.10(금)',
-        '2026.07.11(토)',
-        '2026.07.12(일)',
-        '2026.07.13(월)',
-        '2026.07.14(화)',
-      ],
-    },
-  ];
+  const [mapRegions, setMapRegions] = useState<SvgRegion[]>([]);
+  const calendarMonths: CalendarMonth[] = useMemo(() => [
+    createCalendarMonth(2026, 5),
+    createCalendarMonth(2026, 6),
+    createCalendarMonth(2026, 7),
+  ], []);
   const currentCalendarMonth = calendarMonths[calendarMonthIndex];
+  const getDateValue = (date: string) => Number(date.replace(/\D/g, '').slice(0, 8));
+  const parseCalendarDate = (date: string) => {
+    const [year, month, day] = date
+      .slice(0, 10)
+      .split('.')
+      .map(Number);
+
+    return new Date(year, month - 1, day);
+  };
+  const getTripDayCount = (startDate: string, endDate?: string) => {
+    if (!startDate) return 1;
+    if (!endDate) return 1;
+
+    const start = parseCalendarDate(startDate);
+    const end = parseCalendarDate(endDate);
+    const diff = Math.floor((end.getTime() - start.getTime()) / 86400000);
+
+    return Math.max(diff + 1, 1);
+  };
+  const syncDayCountWithPeriod = (targetCount: number) => {
+    setEditDays((prevDays) => {
+      const nextDays = prevDays.slice(0, targetCount).map(([, ...places], index) => [
+        `DAY ${index + 1}`,
+        ...places,
+      ] as [string, ...string[]]);
+
+      for (let index = nextDays.length; index < targetCount; index += 1) {
+        nextDays.push([`DAY ${index + 1}`]);
+      }
+
+      return nextDays.length > 0 ? nextDays : [['DAY 1']];
+    });
+  };
+
+  useEffect(() => {
+    fetch('/maps/jeonbuk.json')
+      .then((response) => {
+        if (!response.ok) throw new Error('전북 지도 데이터를 불러오지 못했습니다.');
+        return response.json();
+      })
+      .then((data) => setMapRegions(convertGeoJsonToSvgRegions(data)))
+      .catch((error) => {
+        console.error(error);
+        setMapRegions([]);
+      });
+  }, []);
 
   const addDay = () => {
     const nextDay = `DAY ${editDays.length + 1}`;
-    setEditDays([...editDays, [nextDay, '새 일정']]);
+    setEditDays([...editDays, [nextDay]]);
   };
 
   const deleteDay = (day: string) => {
@@ -1191,7 +1451,7 @@ function PlannerDetailModal({ planner, onClose, onComplete, variant = 'detail' }
       if (targetDay !== day) return [targetDay, ...places];
 
       const nextPlaces = places.filter((targetPlace) => targetPlace !== place);
-      return [targetDay, ...(nextPlaces.length ? nextPlaces : ['새 일정'])];
+      return [targetDay, ...nextPlaces];
     }));
     setScheduleModal(null);
   };
@@ -1208,12 +1468,19 @@ function PlannerDetailModal({ planner, onClose, onComplete, variant = 'detail' }
       return;
     }
 
+    if (getDateValue(date) < getDateValue(calendarStartDate)) {
+      setCalendarStartDate(date);
+      setCalendarEndDate('');
+      return;
+    }
+
     setCalendarEndDate(date);
   };
   const applyCalendarPeriod = () => {
     if (!calendarStartDate) return;
 
     setEditPeriod(calendarEndDate ? `${calendarStartDate} - ${calendarEndDate}` : calendarStartDate);
+    syncDayCountWithPeriod(getTripDayCount(calendarStartDate, calendarEndDate));
     setScheduleModal(null);
   };
   const addPlaceCandidates = [
@@ -1246,15 +1513,15 @@ function PlannerDetailModal({ planner, onClose, onComplete, variant = 'detail' }
           <div className={styles.modalTopActions}>
             <label className={styles.visibilityToggle}>
               <span>플래너 공개</span>
-              <input type="checkbox" defaultChecked={planner.status === '공개'} />
+              <input type="checkbox" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} />
               <em aria-hidden="true" />
             </label>
             <button type="button" onClick={onClose}>닫기</button>
           </div>
         </div>
 
-        <div className={styles.detailHero}>
-          <div>
+        <div className={`${styles.detailHero} ${isEditMode ? styles.detailHeroEditing : ''}`}>
+          <div className={styles.detailHeroMain}>
             <p>{isCreateMode ? '새 플래너' : `${planner.status} 플래너`}</p>
             {isEditMode ? (
               <div className={styles.plannerEditHero}>
@@ -1278,6 +1545,25 @@ function PlannerDetailModal({ planner, onClose, onComplete, variant = 'detail' }
                     {editPeriod}
                   </button>
                 </label>
+                <label>
+                  <span>여행 지역</span>
+                  <select
+                    className={styles.regionSelectBox}
+                    value={editRegion}
+                    onChange={(event) => setEditRegion(event.target.value)}
+                  >
+                    <option value="">지역을 선택해주세요.</option>
+                    {jeonbukRegions.map((region) => (
+                      <option key={region.name} value={region.name}>
+                        {region.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>플래너 설명</span>
+                  <textarea defaultValue={planner.desc} aria-label="플래너 설명 수정" />
+                </label>
               </div>
             ) : (
               <>
@@ -1285,22 +1571,63 @@ function PlannerDetailModal({ planner, onClose, onComplete, variant = 'detail' }
                 <span>{editPeriod}</span>
               </>
             )}
-            <div className={styles.plannerTagRow}>
-              <em>{planner.region}</em>
-              <em>{planner.theme}</em>
-              <em>최근 수정 {planner.updatedAt}</em>
-            </div>
+            {!isEditMode && (
+              <div className={styles.plannerTagRow}>
+                <em>{planner.region}</em>
+                <em>{planner.theme}</em>
+                <em>최근 수정 {planner.updatedAt}</em>
+              </div>
+            )}
           </div>
-        </div>
 
-        <div className={styles.plannerDescBox}>
-          <strong>플래너 설명</strong>
-          {isEditMode ? (
-            <textarea defaultValue={planner.desc} aria-label="플래너 설명 수정" />
-          ) : (
-            <p>{planner.desc}</p>
+          {isEditMode && (
+            <aside className={styles.plannerMapPanel}>
+              <div>
+                <strong>전북 지역 선택</strong>
+                <p>지도에서 지역을 클릭해 대표 여행지를 빠르게 선택할 수 있습니다.</p>
+              </div>
+              <div className={styles.jeonbukMiniMap}>
+                {mapRegions.length > 0 ? (
+                  <svg
+                    className={styles.jeonbukRealMap}
+                    viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                    role="img"
+                    aria-label="전북 지역 선택 지도"
+                  >
+                    {mapRegions.map((region) => (
+                      <g
+                        key={region.id}
+                        className={`${styles.mapRegionGroup} ${editRegion === region.name ? styles.mapRegionActive : ''}`}
+                        onClick={() => setEditRegion(region.name)}
+                      >
+                        <path className={styles.mapRegionPath} d={region.d} />
+                      </g>
+                    ))}
+                    {mapRegions.map((region) => (
+                      <text
+                        key={`label-${region.id}`}
+                        x={region.labelX}
+                        y={region.labelY}
+                        className={styles.mapRegionText}
+                      >
+                        {region.name}
+                      </text>
+                    ))}
+                  </svg>
+                ) : (
+                  <div className={styles.mapLoadingText}>지도 데이터를 불러오는 중입니다.</div>
+                )}
+              </div>
+            </aside>
           )}
         </div>
+
+        {!isEditMode && (
+          <div className={styles.plannerDescBox}>
+            <strong>플래너 설명</strong>
+            <p>{planner.desc}</p>
+          </div>
+        )}
 
         <div className={styles.plannerSummaryGrid}>
           <div>
@@ -1312,7 +1639,7 @@ function PlannerDetailModal({ planner, onClose, onComplete, variant = 'detail' }
             <span>등록 장소</span>
           </div>
           <div>
-            <strong>{planner.status}</strong>
+            <strong>{isPublic ? '공개' : '비공개'}</strong>
             <span>공개 상태</span>
           </div>
         </div>
@@ -1444,26 +1771,38 @@ function PlannerDetailModal({ planner, onClose, onComplete, variant = 'detail' }
                     </div>
                   </div>
                   <div className={styles.weekHeader} aria-hidden="true">
-                    {['월', '화', '수', '목', '금', '토', '일'].map((week) => (
-                      <span key={week}>{week}</span>
+                    {['일', '월', '화', '수', '목', '금', '토'].map((week) => (
+                      <span
+                        key={week}
+                        className={week === '일' ? styles.sundayText : week === '토' ? styles.saturdayText : ''}
+                      >
+                        {week}
+                      </span>
                     ))}
                   </div>
                   <div className={styles.calendarGrid}>
-                    {currentCalendarMonth.dates.map((date) => {
-                      const dayNumber = date.match(/\.(\d{2})\(/)?.[1] ?? date;
-                      const dayName = date.match(/\((.)\)/)?.[1] ?? '';
-                      const isStart = calendarStartDate === date;
-                      const isEnd = calendarEndDate === date;
+                    {currentCalendarMonth.dates.map((dateCell) => {
+                      if (!dateCell.date) {
+                        return <span key={dateCell.key} className={styles.calendarBlank} aria-hidden="true" />;
+                      }
+
+                      const isStart = calendarStartDate === dateCell.date;
+                      const isEnd = calendarEndDate === dateCell.date;
+                      const hasRange = Boolean(calendarStartDate && calendarEndDate);
+                      const isBetween = hasRange
+                        && getDateValue(calendarStartDate) < getDateValue(dateCell.date)
+                        && getDateValue(dateCell.date) < getDateValue(calendarEndDate);
+                      const isSundayOrHoliday = dateCell.dayName === '일' || holidayDateValues.has(dateCell.dateText);
+                      const isSaturday = dateCell.dayName === '토';
 
                       return (
                         <button
-                          key={date}
+                          key={dateCell.key}
                           type="button"
-                          className={`${isStart ? styles.selectedStartDate : ''} ${isEnd ? styles.selectedEndDate : ''}`}
-                          onClick={() => selectPeriodDate(date)}
+                          className={`${isStart ? styles.selectedStartDate : ''} ${isEnd ? styles.selectedEndDate : ''} ${isBetween ? styles.selectedBetweenDate : ''} ${isSundayOrHoliday ? styles.holidayDate : ''} ${isSaturday ? styles.saturdayDate : ''}`}
+                          onClick={() => selectPeriodDate(dateCell.date as string)}
                         >
-                          <strong>{dayNumber}</strong>
-                          <span>{dayName} · {date.slice(0, 10)}</span>
+                          <strong>{dateCell.dayNumber}</strong>
                           {isStart && <em>시작</em>}
                           {isEnd && <em>종료</em>}
                         </button>
@@ -1644,9 +1983,11 @@ function Reports() {
 }
 
 function Withdraw() {
+  const router = useRouter();
   const [isAgreed, setIsAgreed] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const showToast = (nextToast: Exclude<ToastState, null>) => {
     setToast(nextToast);
@@ -1668,12 +2009,37 @@ function Withdraw() {
     setShowConfirmModal(true);
   };
 
-  const handleWithdrawConfirm = () => {
-    setShowConfirmModal(false);
-    showToast({
-      type: 'success',
-      message: '회원탈퇴 요청이 접수되었습니다.',
-    });
+  const handleWithdrawConfirm = async () => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await axiosInstance.delete<WithdrawResponse>('/mypage/member');
+
+      if (!response.data.success) {
+        showToast({
+          type: 'error',
+          message: response.data.message || '회원탈퇴 처리에 실패했습니다.',
+        });
+        return;
+      }
+
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      window.dispatchEvent(new Event('tokenUpdated'));
+
+      setShowConfirmModal(false);
+      router.replace(response.data.redirectUrl || '/');
+    } catch (error) {
+      console.error('회원탈퇴 실패', error);
+      showToast({
+        type: 'error',
+        message: '회원탈퇴 요청 중 오류가 발생했습니다.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1711,10 +2077,20 @@ function Withdraw() {
             </div>
             <p>정말 회원탈퇴를 진행하시겠습니까? 탈퇴 후에는 관심 목록, 플래너, 리뷰 데이터를 복구할 수 없습니다.</p>
             <div className={styles.modalBottomActions}>
-              <button type="button" className={styles.backButton} onClick={handleWithdrawConfirm}>
-                탈퇴 진행
+              <button
+                type="button"
+                className={styles.backButton}
+                onClick={handleWithdrawConfirm}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? '처리 중' : '탈퇴 진행'}
               </button>
-              <button type="button" className={styles.secondaryButton} onClick={() => setShowConfirmModal(false)}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => setShowConfirmModal(false)}
+                disabled={isSubmitting}
+              >
                 취소
               </button>
             </div>
