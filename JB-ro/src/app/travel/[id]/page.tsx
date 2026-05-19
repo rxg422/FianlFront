@@ -255,8 +255,17 @@ export default function TravelDetailPage() {
   }, []);
 
   useEffect(() => {
-    setUserInfo(getUserFromToken());
-  }, []);
+  setUserInfo(getUserFromToken());
+  const handleUpdate = () => setUserInfo(getUserFromToken());
+  window.addEventListener("storage", handleUpdate);
+  window.addEventListener("focus", handleUpdate);
+  window.addEventListener("tokenUpdated", handleUpdate);
+  return () => {
+    window.removeEventListener("storage", handleUpdate);
+    window.removeEventListener("focus", handleUpdate);
+    window.removeEventListener("tokenUpdated", handleUpdate);
+  };
+}, []);
 
   useEffect(() => {
     if (!contentId) return;
@@ -340,7 +349,7 @@ export default function TravelDetailPage() {
   };
 
   const handleToggleFavorite = async () => {
-    //if (!requireLogin()) return;
+    if (!requireLogin()) return;
     const res = await fetch(`/api/tourDetail/${contentId}/favorite`, {
       method: "POST",
       headers: getAuthHeader(),
@@ -356,7 +365,7 @@ export default function TravelDetailPage() {
   };
 
   const handleReviewSubmit = async () => {
-    //if (!requireLogin()) return;
+    if (!requireLogin()) return;
     if (!reviewText.trim()) { alert("리뷰 내용을 입력해주세요."); return; }
     if (reviewText.length > 500) { alert("리뷰는 500자 이내로 작성해주세요."); return; }
 
@@ -405,7 +414,7 @@ export default function TravelDetailPage() {
   };
 
   const openReportModal = (reviewId: number) => {
-    //if (!requireLogin()) return;
+    if (!requireLogin()) return;
     setReportTargetId(reviewId);
     setReportType("");
     setReportReason("");
@@ -605,31 +614,49 @@ export default function TravelDetailPage() {
             </div>
 
             <aside className={styles.detailInfo}>
-              <div className={styles.tags}>
-                <span>#{CATEGORY_NAMES[detail.categoryId] ?? "기타"}</span>
-              </div>
-              <h1>{detail.title}</h1>
-              <div className={styles.infoList}>
-                <p>📍 {detail.addr1} {detail.addr2}</p>
-                {detail.tel && <p>☎ {detail.tel}</p>}
-              </div>
-              {detail.homepage && (
-                <a href={extractUrl(detail.homepage)} target="_blank" rel="noopener noreferrer" className={styles.homepageLink}>
-                  홈페이지 바로가기
-                </a>
-              )}
-              <div className={styles.wishBtnWrap}>
-                <button type="button"
-                  className={`${styles.wishBtn} ${liked ? styles.wishActive : ""}`}
-                  onClick={handleToggleFavorite}>
-                  {liked ? "❤" : "♡"} 찜하기 {detail.favoriteCount}
-                </button>
-              </div>
-            </aside>
+  <div className={styles.tags}>
+    <span>#{CATEGORY_NAMES[detail.categoryId] ?? "기타"}</span>
+  </div>
+  <h1>{detail.title}</h1>
+  <div className={styles.infoList}>
+    <p>📍 {detail.addr1} {detail.addr2}</p>
+    {detail.tel && <p>☎ {detail.tel}</p>}
+  </div>
+  {detail.homepage && (
+  <a
+    href={extractUrl(detail.homepage)}
+    target="_blank"
+    rel="noopener noreferrer"
+    className={styles.homepageLink}
+  >
+    홈페이지 바로가기
+  </a>
+)}
+
+<div className={styles.wishBtnWrap}>
+  <button
+    type="button"
+    className={`${styles.wishBtn} ${liked ? styles.wishActive : ""}`}
+    onClick={handleToggleFavorite}
+  >
+    {liked ? (
+      <>
+        <span className={styles.wishHeart}>❤</span>
+        <span className={styles.wishDivider}>|</span>
+        <span className={styles.wishNum}>
+          {detail.favoriteCount + 1}
+        </span>
+      </>
+    ) : (
+      <span>♡ 찜하기</span>
+    )}
+  </button>
+</div>
+</aside>
+
           </section>
         </section>
 
-        {/* iframe일 때 top: 0으로 탭 sticky */}
         <nav className={`${styles.tabMenu} ${isIframe ? styles.tabMenuIframe : ''}`}>
           {(["소개", "상세정보", "리뷰"] as TabType[]).map((tab) => (
             <button key={tab} type="button"
@@ -745,18 +772,23 @@ export default function TravelDetailPage() {
                     <span>{review.createdAt}</span>
                   </div>
                   <div className={styles.reviewBody}>
-                    {review.reviewImage && <img src={review.reviewImage} alt="리뷰 이미지" />}
+                    {review.reviewImage && (
+  <img
+    src={`http://localhost:8081${review.reviewImage}`}
+    alt="리뷰 이미지"
+  />
+)}
                     {editingReviewId === review.reviewId ? (
                       <div className={styles.editForm}>
                         <textarea maxLength={500} value={editingContent}
                           onChange={(e) => setEditingContent(e.target.value)} />
                         <div className={styles.editActions}>
-                          <button type="button" onClick={() => handleReviewUpdate(review.reviewId)}>저장</button>
-                          <button type="button" onClick={() => setEditingReviewId(null)}>취소</button>
+                          <button type="button" onClick={() => handleReviewUpdate(review.reviewId)}>수정완료</button>
+                          <button type="button" onClick={() => setEditingReviewId(null)}>취소하기</button>
                         </div>
                       </div>
                     ) : (
-                      <p>{review.content ?? (review as any).CONTENT}</p>
+                      <p>{(review as any).CONTENT || review.content}</p>
                     )}
                   </div>
                   <div className={styles.reviewFooter}>
@@ -764,7 +796,7 @@ export default function TravelDetailPage() {
                       <>
                         <button type="button" onClick={() => {
                           setEditingReviewId(review.reviewId);
-                          setEditingContent((review as any).content || (review as any).CONTENT);
+                          setEditingContent((review as any).CONTENT || review.content);
                         }}>수정</button>
                         <button type="button" onClick={() => handleReviewDelete(review.reviewId)}>삭제</button>
                       </>
