@@ -618,9 +618,9 @@
 
 .mapBox {
   width: 100%;
-  height: 200px;
+  height: 280px;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: visible;
   margin-bottom: 10px;
   background: var(--gold-light);
 }
@@ -700,7 +700,6 @@
 .popularSection {
   margin-top: 8px;
 }
-
 .popularGrid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -715,6 +714,8 @@
   overflow: hidden;
   transition: box-shadow 0.15s, transform 0.15s;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
 }
 
 .popularCard:hover {
@@ -724,15 +725,41 @@
 
 .popularImg {
   width: 100%;
-  height: 110px;
+  height: 140px;
   background: linear-gradient(135deg, var(--gold-light), var(--gold-border));
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.popularImg img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.popularCategory {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  margin: 10px 12px 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  border: 1px solid transparent;
 }
 
 .popularCard h3 {
   font-size: 13px;
   font-weight: 700;
   color: var(--text-dark);
-  margin: 10px 12px 4px;
+  margin: 0 12px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .popularCard p {
@@ -740,6 +767,30 @@
   color: var(--text-soft);
   margin: 0 12px 12px;
   line-height: 1.5;
+}
+
+.categoryAttraction {
+  background: #e8f7ef;
+  border-color: #b7e4cb;
+  color: #17834f;
+}
+
+.categoryFood {
+  background: #fff4eb;
+  border-color: #ffd7b8;
+  color: #ea580c;
+}
+
+.categoryStay {
+  background: #eef5ff;
+  border-color: #cfe0ff;
+  color: #2563eb;
+}
+
+.categoryFestival {
+  background: #f3edff;
+  border-color: #d7c7ff;
+  color: #7c3aed;
 }
 
 /* 반응형 */
@@ -861,24 +912,7 @@
 }
 
 /* ── 인기 여행지 카테고리 뱃지 ── */
-.popularCategory {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 
-  margin-top: 14px;
-  margin-left: 14px;
-
-  padding: 4px 10px;
-
-  border-radius: 8px;
-
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
-
-  border: 1px solid transparent;
-}
 
 .categoryAttraction {
   background: #e8f7ef;

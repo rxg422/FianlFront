@@ -572,10 +572,10 @@
   display: flex;
   gap: 16px;
   margin-top: 14px;
+  justify-content: flex-end;
 }
 
 .reviewFooter button {
-  margin-left: auto;
   border: none;
   background: none;
   cursor: pointer;
@@ -811,4 +811,7 @@
 .category4 {
   background: linear-gradient(135deg, #e4f0ff, #f4eadf);
   color: #376aa0;
+}
+.tabMenuIframe {
+  top: 0;
 }

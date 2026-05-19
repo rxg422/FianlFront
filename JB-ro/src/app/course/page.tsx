@@ -23,14 +23,16 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/course/list')
+    fetch('http://localhost:8081/api/course/list')
       .then(res => res.json())
       .then(data => {
-        setCourses(data);
+        console.log('API 응답:', data);
+        setCourses(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(err => {
-        console.error(err);
+        console.error('fetch 에러:', err);
+        setCourses([]);
         setLoading(false);
       });
   }, []);

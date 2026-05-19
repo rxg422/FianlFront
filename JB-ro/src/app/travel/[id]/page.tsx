@@ -204,6 +204,7 @@ export default function TravelDetailPage() {
   const { id } = useParams();
   const contentId = Number(id);
 
+  const [isIframe, setIsIframe] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [detail, setDetail] = useState<TourDetail | null>(null);
   const [images, setImages] = useState<string[]>([]);
@@ -249,6 +250,11 @@ export default function TravelDetailPage() {
     return true;
   };
 
+  // iframe 여부 감지
+  useEffect(() => {
+    setIsIframe(window.self !== window.top);
+  }, []);
+
   useEffect(() => {
     setUserInfo(getUserFromToken());
   }, []);
@@ -267,7 +273,13 @@ export default function TravelDetailPage() {
       setNearbyPlaces(data.nearbyPlaces);
       const imgUrls = data.images.map((img: any) => img.originImgUrl);
       if (data.detail.firstImage) imgUrls.unshift(data.detail.firstImage);
-      setImages(imgUrls.length > 0 ? imgUrls : ["/images/no-image.png"]);
+      const fallback =
+        data.detail.categoryId === 1 ? "/travel/no-image-attraction.png"
+        : data.detail.categoryId === 2 ? "/travel/no-image-food.png"
+        : data.detail.categoryId === 3 ? "/travel/no-image-festival.png"
+        : data.detail.categoryId === 4 ? "/travel/no-image-hotel.png"
+        : "/travel/no-image-attraction.png";
+      setImages(imgUrls.length > 0 ? imgUrls : [fallback]);
     };
     fetchDetail();
   }, [contentId]);
@@ -329,7 +341,7 @@ export default function TravelDetailPage() {
   };
 
   const handleToggleFavorite = async () => {
-    //if (!requireLogin()) return;(나중에 주석 풀어야한다)
+    //if (!requireLogin()) return;
     const res = await fetch(`/api/tourDetail/${contentId}/favorite`, {
       method: "POST",
       headers: getAuthHeader(),
@@ -345,7 +357,7 @@ export default function TravelDetailPage() {
   };
 
   const handleReviewSubmit = async () => {
-    //if (!requireLogin()) return;(나중에ㅐ 풀어야함)
+    //if (!requireLogin()) return;
     if (!reviewText.trim()) { alert("리뷰 내용을 입력해주세요."); return; }
     if (reviewText.length > 500) { alert("리뷰는 500자 이내로 작성해주세요."); return; }
 
@@ -394,7 +406,7 @@ export default function TravelDetailPage() {
   };
 
   const openReportModal = (reviewId: number) => {
-    //if (!requireLogin()) return;(나중에)
+    //if (!requireLogin()) return;
     setReportTargetId(reviewId);
     setReportType("");
     setReportReason("");
@@ -579,7 +591,10 @@ export default function TravelDetailPage() {
     <>
       <main className={styles.detailPage}>
         <section ref={topRef} className={styles.topAnchor}>
-          <Link href="/travel" className={styles.backBtn}>← 목록으로 돌아가기</Link>
+          {/* iframe일 때 목록 버튼 숨김 */}
+          {!isIframe && (
+            <Link href="/travel" className={styles.backBtn}>← 목록으로 돌아가기</Link>
+          )}
 
           <section className={styles.detailTop}>
             <div className={styles.detailImageBox}>
@@ -614,10 +629,10 @@ export default function TravelDetailPage() {
               </div>
             </aside>
           </section>
-        </section>
+        </section> 
 
-        <nav className={styles.tabMenu}>
-          {(["소개", "상세정보", "리뷰"] as TabType[]).map((tab) => (
+<nav className={`${styles.tabMenu} ${isIframe ? styles.tabMenuIframe : ''}`}>
+  {(["소개", "상세정보", "리뷰"] as TabType[]).map((tab) => (
             <button key={tab} type="button"
               className={activeTab === tab ? styles.active : ""}
               onClick={() => moveToSection(tab)}>
@@ -661,20 +676,16 @@ export default function TravelDetailPage() {
               <Link href={`/travel/${place.contentId}`} key={place.contentId}>
                 <article className={styles.nearbyCard}>
                   <img
-  src={
-    place.firstImage ||
-    (place.categoryId === 1
-      ? "/travel/no-image-attraction.png"
-      : place.categoryId === 2
-      ? "/travel/no-image-food.png"
-      : place.categoryId === 3
-      ? "/travel/no-image-festival.png"
-      : place.categoryId === 4
-      ? "/travel/no-image-hotel.png"
-      : "/travel/no-image-attraction.png")
-  }
-  alt={place.title}
-/>
+                    src={
+                      place.firstImage ||
+                      (place.categoryId === 1 ? "/travel/no-image-attraction.png"
+                      : place.categoryId === 2 ? "/travel/no-image-food.png"
+                      : place.categoryId === 3 ? "/travel/no-image-festival.png"
+                      : place.categoryId === 4 ? "/travel/no-image-hotel.png"
+                      : "/travel/no-image-attraction.png")
+                    }
+                    alt={place.title}
+                  />
                   <div className={styles.nearbyContent}>
                     <span>{CATEGORY_NAMES[place.categoryId] ?? "기타"}</span>
                     <h4>{place.title}</h4>
@@ -689,33 +700,36 @@ export default function TravelDetailPage() {
         <section ref={reviewRef} className={styles.reviewSection}>
           <h2>리뷰 ({totalReviews})</h2>
 
-          <div className={styles.reviewForm}>
-            <textarea maxLength={500}
-              placeholder={userInfo ? "리뷰를 남겨주세요." : "로그인 후 리뷰를 작성할 수 있습니다."}
-              value={reviewText}
-              disabled={!userInfo}
-              onChange={(e) => setReviewText(e.target.value)}
-              onClick={() => { if (!userInfo) setIsLoginModalOpen(true); }} />
-            <div className={styles.reviewFormBottom}>
-              <span>{reviewText.length} / 500</span>
-              <div className={styles.reviewActions}>
-                <label className={styles.imageUploadBtn}
-                  onClick={(e) => { if (!userInfo) { e.preventDefault(); setIsLoginModalOpen(true); } }}>
-                  <img src="/icons/image_upload.png" alt="" className={styles.uploadIconImg} />
-                  사진 등록
-                  <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleImageChange} />
-                </label>
-                <button type="button" onClick={handleReviewSubmit}>등록하기</button>
+          {/* iframe일 때 리뷰 입력창 숨김 */}
+          {!isIframe && (
+            <div className={styles.reviewForm}>
+              <textarea maxLength={500}
+                placeholder={userInfo ? "리뷰를 남겨주세요." : "로그인 후 리뷰를 작성할 수 있습니다."}
+                value={reviewText}
+                disabled={!userInfo}
+                onChange={(e) => setReviewText(e.target.value)}
+                onClick={() => { if (!userInfo) setIsLoginModalOpen(true); }} />
+              <div className={styles.reviewFormBottom}>
+                <span>{reviewText.length} / 500</span>
+                <div className={styles.reviewActions}>
+                  <label className={styles.imageUploadBtn}
+                    onClick={(e) => { if (!userInfo) { e.preventDefault(); setIsLoginModalOpen(true); } }}>
+                    <img src="/icons/image_upload.png" alt="" className={styles.uploadIconImg} />
+                    사진 등록
+                    <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={handleImageChange} />
+                  </label>
+                  <button type="button" onClick={handleReviewSubmit}>등록하기</button>
+                </div>
               </div>
+              <p className={styles.uploadGuide}>사진은 1장만 등록 가능합니다.</p>
+              {previewImage && (
+                <div className={styles.previewImage}>
+                  <img src={previewImage} alt="리뷰 이미지 미리보기" />
+                  <button type="button" onClick={() => setPreviewImage(null)}>삭제</button>
+                </div>
+              )}
             </div>
-            <p className={styles.uploadGuide}>사진은 1장만 등록 가능합니다.</p>
-            {previewImage && (
-              <div className={styles.previewImage}>
-                <img src={previewImage} alt="리뷰 이미지 미리보기" />
-                <button type="button" onClick={() => setPreviewImage(null)}>삭제</button>
-              </div>
-            )}
-          </div>
+          )}
 
           <div className={styles.reviewScroll}>
             {reviews.map((review) => (
@@ -744,7 +758,7 @@ export default function TravelDetailPage() {
                         </div>
                       </div>
                     ) : (
-                      <p>{review.content}</p>
+                      <p>{review.content ?? (review as any).CONTENT}</p>
                     )}
                   </div>
                   <div className={styles.reviewFooter}>
@@ -752,7 +766,7 @@ export default function TravelDetailPage() {
                       <>
                         <button type="button" onClick={() => {
                           setEditingReviewId(review.reviewId);
-                          setEditingContent(review.content);
+                          setEditingContent((review as any).content || (review as any).CONTENT);
                         }}>수정</button>
                         <button type="button" onClick={() => handleReviewDelete(review.reviewId)}>삭제</button>
                       </>
@@ -808,10 +822,12 @@ export default function TravelDetailPage() {
         )}
       </main>
 
-      <LoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-      />
+      {!isIframe && (
+        <LoginModal
+          isOpen={isLoginModalOpen}
+          onClose={() => setIsLoginModalOpen(false)}
+        />
+      )}
     </>
   );
 }
