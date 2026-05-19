@@ -290,7 +290,7 @@ export default function TravelDetailPage() {
       setImages(imgUrls.length > 0 ? imgUrls : [fallback]);
     };
     fetchDetail();
-  }, [contentId]);
+  }, [contentId, userInfo?.memberId]);
 
   useEffect(() => {
     if (!contentId) return;
