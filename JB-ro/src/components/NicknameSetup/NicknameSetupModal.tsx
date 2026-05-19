@@ -31,9 +31,18 @@ const NicknameSetupModal = () => {
   const [isAvailable, setIsAvailable] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const validateNickname = (value: string): string => {
+    if (!value.trim()) return '닉네임을 입력해주세요.';
+    if (value.length < 2 || value.length > 12) return '닉네임은 2~12자리로 입력해주세요.';
+    if (!/^[가-힣a-zA-Z]{2,12}$/.test(value)) return '닉네임은 한글과 영어만 사용 가능합니다.';
+    return '';
+  };
+
   const handleCheck = async () => {
-    if (!nickname.trim()) {
-      setCheckMsg('닉네임을 입력해주세요.');
+    const error = validateNickname(nickname);
+    if (error) {
+      setCheckMsg(error);
+      setIsAvailable(false);
       return;
     }
     try {

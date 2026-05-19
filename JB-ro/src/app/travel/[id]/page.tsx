@@ -250,7 +250,6 @@ export default function TravelDetailPage() {
     return true;
   };
 
-  // iframe 여부 감지
   useEffect(() => {
     setIsIframe(window.self !== window.top);
   }, []);
@@ -327,7 +326,7 @@ export default function TravelDetailPage() {
 
   const scrollWithOffset = (target: HTMLElement | null) => {
     if (!target) return;
-    const top = target.getBoundingClientRect().top + window.scrollY - 150;
+    const top = target.getBoundingClientRect().top + window.scrollY - (isIframe ? 50 : 150);
     window.scrollTo({ top, behavior: "smooth" });
   };
 
@@ -591,7 +590,6 @@ export default function TravelDetailPage() {
     <>
       <main className={styles.detailPage}>
         <section ref={topRef} className={styles.topAnchor}>
-          {/* iframe일 때 목록 버튼 숨김 */}
           {!isIframe && (
             <Link href="/travel" className={styles.backBtn}>← 목록으로 돌아가기</Link>
           )}
@@ -629,10 +627,11 @@ export default function TravelDetailPage() {
               </div>
             </aside>
           </section>
-        </section> 
+        </section>
 
-<nav className={`${styles.tabMenu} ${isIframe ? styles.tabMenuIframe : ''}`}>
-  {(["소개", "상세정보", "리뷰"] as TabType[]).map((tab) => (
+        {/* iframe일 때 top: 0으로 탭 sticky */}
+        <nav className={`${styles.tabMenu} ${isIframe ? styles.tabMenuIframe : ''}`}>
+          {(["소개", "상세정보", "리뷰"] as TabType[]).map((tab) => (
             <button key={tab} type="button"
               className={activeTab === tab ? styles.active : ""}
               onClick={() => moveToSection(tab)}>
@@ -700,7 +699,6 @@ export default function TravelDetailPage() {
         <section ref={reviewRef} className={styles.reviewSection}>
           <h2>리뷰 ({totalReviews})</h2>
 
-          {/* iframe일 때 리뷰 입력창 숨김 */}
           {!isIframe && (
             <div className={styles.reviewForm}>
               <textarea maxLength={500}
