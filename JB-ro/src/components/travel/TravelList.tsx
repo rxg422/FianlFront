@@ -68,7 +68,6 @@ const regions = [
 ];
 
 const ITEMS_PER_PAGE = 25;
-const API_BASE_URL = "http://localhost:8081";
 
 export default function TravelList() {
   const router = useRouter();
@@ -83,10 +82,21 @@ export default function TravelList() {
   const [items, setItems] = useState<TravelItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
 
-  // 토큰에서 userId 추출
-  const token = localStorage.getItem('accessToken');
-  const userId = token ? 11 : null;
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return;
+    try {
+      const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      const payload = JSON.parse(
+        decodeURIComponent(
+          atob(base64).split("").map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join("")
+        )
+      );
+      setUserId(payload.memberId);
+    } catch { setUserId(null); }
+  }, []);
 
   const selectedCategoryLabel = useMemo(() => {
     const found = categories.find(
@@ -129,9 +139,7 @@ export default function TravelList() {
 
     try {
       const response = await api.get(`/api/tourList?${params}`);
-
       const data: TravelListResponse = response.data;
-
       setItems(data.list);
       setTotalCount(data.totalCount);
     } catch (error) {
@@ -142,7 +150,7 @@ export default function TravelList() {
   };
 
   useEffect(() => {
-  fetchTravelList();
+    fetchTravelList();
   }, [selectedCategoryId, selectedSort, selectedRegion, currentPage, userId]);
 
   const handleSearch = () => {
@@ -156,8 +164,11 @@ export default function TravelList() {
     }
 
     try {
+      const token = localStorage.getItem("accessToken");
       const response = await api.post(
-        `/api/tourList/favorite/${contentId}?userId=${userId}`
+        `/api/tourList/favorite/${contentId}`,
+        null,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
 
       const result = response.data;
