@@ -1,4 +1,5 @@
 'use client';
+import axiosInstance from '@/utils/axiosInstance';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -9,6 +10,29 @@ interface UserInfo {
   nickname: string;
   profileImg: string | null;
 }
+
+interface MyPageProfile {
+  nickname: string;
+  profile?: string | null;
+}
+
+const decodeTokenUserInfo = (token: string): UserInfo | null => {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(
+      decodeURIComponent(
+        atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
+      )
+    );
+
+    return {
+      nickname: payload.nickname || '회원',
+      profileImg: payload.profileImg || payload.profile || null,
+    };
+  } catch {
+    return null;
+  }
+};
 
 const Header = () => {
   const [isIframe, setIsIframe] = useState(false);
@@ -22,42 +46,58 @@ const Header = () => {
   }, []);
   
   useEffect(() => {
-    const checkToken = () => {
+    let isMounted = true;
+
+    const checkToken = async () => {
       const token = localStorage.getItem('accessToken');
       if (!token) {
         setUserInfo(null);
         return;
       }
-      try {
-        const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-        const payload = JSON.parse(
-          decodeURIComponent(
-            atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
-          )
-        );
-        setUserInfo({ nickname: payload.nickname, profileImg: payload.profileImg || null });
-      } catch {
+
+      const tokenUserInfo = decodeTokenUserInfo(token);
+
+      if (!tokenUserInfo) {
         localStorage.removeItem('accessToken');
         setUserInfo(null);
+        return;
+      }
+
+      setUserInfo(tokenUserInfo);
+
+      try {
+        const response = await axiosInstance.get<MyPageProfile>('/mypage/profile');
+        if (!isMounted) return;
+
+        setUserInfo({
+          nickname: response.data.nickname || tokenUserInfo.nickname,
+          profileImg: response.data.profile || null,
+        });
+      } catch (error) {
+        console.error('헤더 프로필 조회 실패', error);
       }
     };
 
-    checkToken();
+    void checkToken();
 
     // localStorage 변경 감지 (다른 탭에서의 변경)
-    window.addEventListener('storage', checkToken);
+    window.addEventListener('storage', checkToken as EventListener);
 
     // 커스텀 이벤트로 같은 탭에서의 localStorage 변경 감지
-    window.addEventListener('tokenUpdated', checkToken);
+    window.addEventListener('tokenUpdated', checkToken as EventListener);
+    window.addEventListener('profileUpdated', checkToken as EventListener);
 
     return () => {
-      window.removeEventListener('storage', checkToken);
-      window.removeEventListener('tokenUpdated', checkToken);
+      isMounted = false;
+      window.removeEventListener('storage', checkToken as EventListener);
+      window.removeEventListener('tokenUpdated', checkToken as EventListener);
+      window.removeEventListener('profileUpdated', checkToken as EventListener);
     };
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     setUserInfo(null);
     window.location.href = '/';
   };
