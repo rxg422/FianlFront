@@ -11,11 +11,16 @@ interface UserInfo {
 }
 
 const Header = () => {
+  const [isIframe, setIsIframe] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [lang, setLang] = useState<'KO' | 'EN'>('KO');
   const pathname = usePathname();
 
+  useEffect(() => {
+    setIsIframe(window.self !== window.top);
+  }, []);
+  
   useEffect(() => {
     const checkToken = () => {
       const token = localStorage.getItem('accessToken');
@@ -58,6 +63,8 @@ const Header = () => {
   };
 
   const toggleLang = () => setLang(prev => prev === 'KO' ? 'EN' : 'KO');
+
+  if (isIframe) return null;
 
   return (
     <>
