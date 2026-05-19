@@ -507,11 +507,14 @@
   display: flex;
   gap: 16px;
   margin-top: 14px;
+
+  justify-content: flex-end;
+
   color: #333;
+
 }
 
 .reviewFooter button {
-  margin-left: auto;
   border: none;
   background: none;
   cursor: pointer;
@@ -680,8 +683,41 @@
   align-items: center;
   gap: 350px;
 
-  margin-top: 40px;
-  border-bottom: 1px solid #cfc4b3;
-  background: #fffaf1;
-  backdrop-filter: blur(6px);
+
+.detailNoImage span {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.65);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.detailNoImage strong {
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.category1 {
+  background: linear-gradient(135deg, #e7f4ec, #f7f1df);
+  color: #0f7b51;
+}
+
+.category2 {
+  background: linear-gradient(135deg, #fff0dd, #f8e2c0);
+  color: #b85b17;
+}
+
+.category3 {
+  background: linear-gradient(135deg, #fff3cf, #ead7ff);
+  color: #7a4b9f;
+}
+
+.category4 {
+  background: linear-gradient(135deg, #e4f0ff, #f4eadf);
+  color: #376aa0;
+}
+.tabMenuIframe {
+  top: 0;
+
+}
 }

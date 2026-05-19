@@ -4,6 +4,9 @@ const nextConfig = {
     '192.168.10.28',
     '192.168.10.29',
   ],
+  experimental: {
+    scrollRestoration: false,
+  },
   async rewrites() {
     return [
       {
