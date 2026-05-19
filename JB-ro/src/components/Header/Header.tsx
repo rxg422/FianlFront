@@ -59,6 +59,13 @@ const Header = () => {
 
   const toggleLang = () => setLang(prev => prev === 'KO' ? 'EN' : 'KO');
 
+  const handleMyPageClick = (e: React.MouseEvent) => {
+    if (!userInfo) {
+      e.preventDefault();
+      setIsModalOpen(true);
+    }
+  };
+
   return (
     <>
       <header className={styles.header}>
@@ -90,21 +97,25 @@ const Header = () => {
                 </ul>
               </li>
 
-              <li><Link href="/MyPage">마이페이지</Link></li>
+              <li>
+                <Link href="/MyPage" onClick={handleMyPageClick}>
+                  마이페이지
+                </Link>
+              </li>
             </ul>
           </nav>
 
           <div className={styles.auth}>
             {userInfo ? (
               <div className={styles.userInfo}>
-                <Link href="/MyPage" className={styles.profileBox}>
+                <div className={styles.profileBox}>
                   {userInfo.profileImg ? (
                     <img src={userInfo.profileImg} alt="프로필" className={styles.profileImg} />
                   ) : (
                     <div className={styles.profileDefault}>{userInfo.nickname?.charAt(0)}</div>
                   )}
                   <span className={styles.nickname}>{userInfo.nickname}</span>
-                </Link>
+                </div>
                 <button className={styles.logoutBtn} onClick={handleLogout}>로그아웃</button>
               </div>
             ) : (
