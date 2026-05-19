@@ -1,3 +1,4 @@
+// 같은 브라우저에서는 하루 동안 같은 역사 이야기 유지
 'use client';
 import React from 'react';
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -152,8 +153,11 @@ const Home = () => {
   const router  = useRouter();
   const season  = getSeason();
   const dayIdx  = getDayIndex();
-  const todayHistory = HISTORY_STORIES[dayIdx % HISTORY_STORIES.length];
-  const tagStyle     = TAG_COLORS_HISTORY[todayHistory.tag] || { bg:'#f0ede5', color:'#7a5c2e' };
+
+  // ── AI 데이터용 상태 추가 ───────────────────
+  const [todayHistory, setTodayHistory] = useState<HistoryStory | null>(null);
+  const [isAiLoading, setIsAiLoading] = useState(true);
+
   const dailyCourses = getDaily3Courses(dayIdx);
   const mainCourse   = dailyCourses[0];
   const subCourses   = dailyCourses.slice(1);
@@ -166,6 +170,41 @@ const Home = () => {
   const [aiParticles,      setAiParticles]      = useState<Particle[]>([]);
   // 인기 여행지 — API에서 받아오는 구조 (초기값 빈 배열)
   const [popularSites, setPopularSites] = useState<TravelItem[]>([]);
+
+  // ── AI 역사 스토리 호출 (하루 1회 캐싱 로직 추가) ───────────────────
+  useEffect(() => {
+    const fetchAiHistory = async () => {
+      // 1. 오늘 날짜 및 캐시 확인
+      const todayDate = new Date().toDateString();
+      const cachedData = localStorage.getItem('jb_today_history');
+      const cachedDate = localStorage.getItem('jb_history_date');
+
+      // 2. 캐시된 데이터가 오늘 날짜와 같으면 API 호출 없이 사용
+      if (cachedData && cachedDate === todayDate) {
+        setTodayHistory(JSON.parse(cachedData));
+        setIsAiLoading(false);
+        return;
+      }
+
+      try {
+        setIsAiLoading(true);
+        const res = await fetch('/api/historyAI');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        
+        // 3. 받아온 데이터를 상태에 저장하고 로컬스토리지에 캐싱
+        setTodayHistory(data);
+        localStorage.setItem('jb_today_history', JSON.stringify(data));
+        localStorage.setItem('jb_history_date', todayDate);
+        
+      } catch (err) {
+        console.error("AI 역사 로드 실패", err);
+      } finally {
+        setIsAiLoading(false);
+      }
+    };
+    fetchAiHistory();
+  }, []);
 
   useEffect(()=>{
     setBannerParticles(makeParticles(season==='winter'?30:season==='summer'?14:22));
@@ -205,6 +244,9 @@ const Home = () => {
   },[historyModalOpen]);
 
   const keywords = SEASON_KEYWORDS[season];
+  const tagStyle = todayHistory 
+    ? (TAG_COLORS_HISTORY[todayHistory.tag] || { bg:'#f0ede5', color:'#7a5c2e' })
+    : { bg:'#f0ede5', color:'#7a5c2e' };
 
   return (
     <>
@@ -399,27 +441,37 @@ const Home = () => {
 
           </div>
 
-          {/* 역사 사이드바 */}
+          {/* 역사 사이드바 — AI 데이터 연동 ─────────────────── */}
           <aside className={styles.historyCard}>
-            <div className={styles.historyCardHeader}>
-              <span className={styles.historyCardHeading}>오늘의 역사 이야기</span>
-              <span className={styles.historyDateBadge}>{todayHistory.date}</span>
-            </div>
-            <div className={styles.historyCardImage}/>
-            <div className={styles.historyCardBody}>
-              <span className={styles.historyCardTag} style={{background:tagStyle.bg,color:tagStyle.color}}>{todayHistory.tag}</span>
-              <h4 className={styles.historyCardTitle}>{todayHistory.title}</h4>
-              <p className={styles.historyCardDesc}>{todayHistory.desc}</p>
-            </div>
-            <div className={styles.historyCardFooter}>
-              <button className={styles.historyDetailBtn} onClick={()=>setHistoryModalOpen(true)}>자세히 보기</button>
-            </div>
+            {isAiLoading ? (
+              <div style={{padding: '40px', textAlign: 'center', color: '#999'}}>
+                역사를 발굴하는 중...
+              </div>
+            ) : todayHistory ? (
+              <>
+                <div className={styles.historyCardHeader}>
+                  <span className={styles.historyCardHeading}>오늘의 역사 이야기</span>
+                  <span className={styles.historyDateBadge}>{todayHistory.date}</span>
+                </div>
+                <div className={styles.historyCardImage}/>
+                <div className={styles.historyCardBody}>
+                  <span className={styles.historyCardTag} style={{background:tagStyle.bg,color:tagStyle.color}}>{todayHistory.tag}</span>
+                  <h4 className={styles.historyCardTitle}>{todayHistory.title}</h4>
+                  <p className={styles.historyCardDesc}>{todayHistory.desc}</p>
+                </div>
+                <div className={styles.historyCardFooter}>
+                  <button className={styles.historyDetailBtn} onClick={()=>setHistoryModalOpen(true)}>자세히 보기</button>
+                </div>
+              </>
+            ) : (
+              <div style={{padding: '20px'}}>정보를 불러올 수 없습니다.</div>
+            )}
           </aside>
         </div>
       </div>
 
-      {/* 역사 모달 */}
-      {historyModalOpen&&(
+      {/* 역사 모달 — AI 데이터 연동 ─────────────────── */}
+      {historyModalOpen && todayHistory && (
         <div className={styles.modalOverlay} onClick={()=>setHistoryModalOpen(false)}>
           <div className={styles.modalPanel} onClick={e=>e.stopPropagation()}>
             <button className={styles.modalClose} onClick={()=>setHistoryModalOpen(false)} aria-label="닫기">✕</button>
